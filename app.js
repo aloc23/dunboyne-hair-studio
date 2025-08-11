@@ -1,242 +1,190 @@
 
-import { seedIfEmpty, getAll, add, put } from './db.js';
-import { vatSplit, postTakings, postExpense, listJournal, reportPNL, reportBalanceSheet, reportVAT, reportCommission } from './ledger.js';
-import { computeTrueCost, saveAnalysis, listAnalyses } from './cost_analyzer.js';
-
-function qs(sel){ return document.querySelector(sel); }
-function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
-function money(n){ return '€' + (n||0).toFixed(2); }
-
-async function init() {
-  await seedIfEmpty();
-  bindTabs();
-  await loadSettingsUI();
-  await loadStylistUI();
-  bindAccounting();
-  bindExpense();
-  bindReports();
-  bindData();
-  bindCostAnalyzer();
-  refreshKPIs();
-  refreshJournal();
+function byId(id){ return document.getElementById(id); }
+function initTabs(){
+  const nav = byId('tabs');
+  nav.addEventListener('click', (e)=>{
+    if(e.target.tagName!=='BUTTON') return;
+    const t = e.target.getAttribute('data-tab');
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    document.querySelectorAll('.tab').forEach(sec=>sec.classList.remove('active'));
+    byId(t).classList.add('active');
+  });
 }
-
-function bindTabs() {
-  qsa('.tab').forEach(btn => btn.addEventListener('click', () => {
-    qsa('.tab').forEach(b=>b.classList.remove('active'));
-    qsa('.tab-panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    qs('#tab-'+btn.dataset.tab).classList.add('active');
-  }));
+async function loadSettings(){
+  const s = await DB.kvGet('settings') || { vat:23, vatMode:'include' };
+  byId('set-vat').value = s.vat ?? 23;
+  byId('set-vatmode').value = s.vatMode || 'include';
 }
-
-async function loadSettingsUI() {
-  const settings = (await getAll('settings'))[0];
-  qs('#setVatRate').value = settings.defaultVatRate || 23;
-  qs('#globalVatMode').value = settings.vatMode || 'include';
-  qs('#saveSettings').onclick = async () => {
-    const s = (await getAll('settings'))[0];
-    s.defaultVatRate = parseFloat(qs('#setVatRate').value);
-    s.vatMode = qs('#globalVatMode').value;
-    await put('settings', s);
-    alert('Saved settings');
-  };
+async function saveSettings(){
+  const s = { vat: Number(byId('set-vat').value||23), vatMode: byId('set-vatmode').value };
+  await DB.kvSet('settings', s);
+  alert('Saved');
 }
-
-async function loadStylistUI() {
-  const stylists = await getAll('stylists');
-  const sel = qs('#tkStylist');
-  sel.innerHTML = stylists.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-  // table
-  const tbody = qs('#stylistTable tbody');
-  tbody.innerHTML = stylists.map(s=>`<tr><td>${s.name}</td><td>${(s.commissionRate||0).toFixed(2)}</td></tr>`).join('');
-  qs('#stylistForm').onsubmit = async (e) => {
+function seed(){
+  const today = new Date().toISOString().slice(0,10);
+  byId('tak-date').value = today;
+  byId('exp-date').value = today;
+  byId('rep-from').value = today.slice(0,7)+'-01';
+  byId('rep-to').value = today;
+}
+function renderRecent(rows){
+  const tbl = byId('recent-table');
+  const headers = ['Date','Type','Memo','Lines'];
+  const trs = rows.slice(-10).reverse().map(r=>{
+    const line = r.lines.map(l=>`${l.account}: ${ (l.debit?'+':'-') }${(l.debit||l.credit).toFixed(2)}`).join('<br>');
+    return `<tr><td>${r.date}</td><td>${r.source}</td><td>${r.memo}</td><td>${line}</td></tr>`;
+  });
+  tbl.innerHTML = `<tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>${trs.join('')}`;
+}
+async function refreshRecent(){
+  const j = await DB.all('journal');
+  renderRecent(j);
+}
+function setupTakings(){
+  byId('takings-form').addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const rec = { name: qs('#styName').value, commissionRate: parseFloat(qs('#styRate').value||'0') };
-    await add('stylists', rec);
-    await loadStylistUI();
-    e.target.reset();
-  };
+    const date = byId('tak-date').value;
+    const note = byId('tak-note').value;
+    const servicesGross = Number(byId('tak-services').value||0);
+    const retailGross = Number(byId('tak-retail').value||0);
+    const refundsGross = Number(byId('tak-refunds').value||0);
+    const cash = Number(byId('tak-cash').value||0);
+    const card = Number(byId('tak-card').value||0);
+    const vouchersIn = Number(byId('tak-vouchers-in').value||0);
+    const vouchersOut = Number(byId('tak-vouchers-out').value||0);
+    const vatMode = byId('tak-vatmode').value;
+    const s = await DB.kvGet('settings') || { vat:23 };
+    const vatRate = s.vat || 23;
+    await Ledger.postTakings({date, servicesGross, retailGross, refundsGross, cash, card, vouchersIn, vouchersOut, vatRate, vatMode, note});
+    await refreshRecent();
+    alert('Takings posted');
+  });
 }
-
-function bindAccounting() {
-  qs('#takingsForm').onsubmit = async (e) => {
+function setupExpense(){
+  byId('expense-form').addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const settings = (await getAll('settings'))[0];
-    const tk = {
-      date: qs('#tkDate').value || new Date().toISOString().slice(0,10),
-      stylistId: parseInt(qs('#tkStylist').value||'0'),
-      servicesGross: parseFloat(qs('#tkServicesGross').value||'0'),
-      retailGross: parseFloat(qs('#tkRetailGross').value||'0'),
-      vatRate: parseFloat(qs('#tkVatRate').value||settings.defaultVatRate||23),
-      cash: parseFloat(qs('#tkCash').value||'0'),
-      card: parseFloat(qs('#tkCard').value||'0'),
-      vouchersIn: parseFloat(qs('#tkVouchersIn').value||'0'),
-      vouchersOut: parseFloat(qs('#tkVouchersOut').value||'0'),
-      refunds: parseFloat(qs('#tkRefunds').value||'0'),
-      vatMode: qs('#globalVatMode').value || settings.vatMode || 'include'
+    const date = byId('exp-date').value;
+    const supplier = byId('exp-supplier').value;
+    const category = byId('exp-category').value;
+    const net = Number(byId('exp-net').value||0);
+    const vatRate = Number(byId('exp-vatrate').value||0);
+    const total = Number(byId('exp-total').value||0);
+    await Ledger.postExpense({date, supplier, category, net, vatRate, total});
+    await refreshRecent();
+    alert('Expense posted');
+  });
+}
+function setupReports(){
+  byId('btn-run').addEventListener('click', async ()=>{
+    const from = byId('rep-from').value, to = byId('rep-to').value;
+    const j = await Ledger.journalBetween(from,to);
+    const balances = Reports.computeBalances(j);
+    const pl = Reports.plFrom(balances);
+    const bs = Reports.bsFrom(balances);
+    const vat = Reports.vatSummary(j);
+    const plRows = { headers:['Name','Amount'],
+      rows:[ ['Sales (total)', pl.salesTotal], ['Refunds', pl.refundsTotal], ['Expenses', pl.expenseTotal], ['Gross Profit', pl.grossProfit] ] };
+    Reports.renderTable(document.getElementById('pl-table'), plRows);
+    const bsRows = { headers:['Section','Amount'],
+      rows:[ ['Assets total', bs.assetsTotal], ['Liabilities total', bs.liabsTotal], ['Equity total', bs.equityTotal] ] };
+    Reports.renderTable(document.getElementById('bs-table'), bsRows);
+    const vatRows = { headers:['Output VAT','Input VAT','Due'], rows:[[vat.output, vat.input, vat.due]] };
+    Reports.renderTable(document.getElementById('vat-table'), vatRows);
+  });
+}
+function setupCost(){
+  const list = document.getElementById('materials-list');
+  Cost.addMaterialRow(list);
+  document.getElementById('add-material').addEventListener('click', ()=>Cost.addMaterialRow(list));
+  document.getElementById('cost-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const mats = Array.from(list.querySelectorAll('.grid-3')).map(row=>{
+      return { name: row.querySelector('.mat-name').value,
+        units: Number(row.querySelector('.mat-units').value||0),
+        cost: Number(row.querySelector('.mat-cost').value||0) };
+    });
+    const params = {
+      service: document.getElementById('cost-service').value,
+      target: Number(document.getElementById('cost-target').value||0),
+      materials: mats,
+      mins: Number(document.getElementById('labour-mins').value||0),
+      rate: Number(document.getElementById('labour-rate').value||0),
+      overhead: Number(document.getElementById('overhead').value||0),
+      price: Number(document.getElementById('price-gross').value||0),
+      vat: Number(document.getElementById('price-vat').value||0)
     };
-    await postTakings(tk);
-    e.target.reset();
-    await refreshKPIs();
-    await refreshJournal();
-    alert('Takings posted.');
-  };
-}
-
-async function refreshKPIs() {
-  // simple: sum takings for current month
-  const now = new Date();
-  const period = now.toISOString().slice(0,7);
-  const pnl = await reportPNL(period);
-  const vat = await reportVAT(period);
-  qs('#kpiRevenueGross').textContent = money(Math.max(0, pnl.totalIncome)); // rough
-  // We can calculate net revenue as income rows only
-  const netIncome = pnl.rows.filter(r=>r.amount>0).reduce((a,b)=>a+b.amount,0);
-  qs('#kpiRevenueNet').textContent = money(netIncome);
-  qs('#kpiVatOut').textContent = money(vat.output);
-  // expenses net is negative in pnl rows; show positive
-  const totalExpense = -pnl.rows.filter(r=>r.amount<0).reduce((a,b)=>a+b.amount,0);
-  qs('#kpiExpensesNet').textContent = money(totalExpense);
-}
-
-async function refreshJournal() {
-  const rows = await listJournal(20);
-  const tbody = qs('#journalTable tbody');
-  tbody.innerHTML = rows.map(r=>{
-    const lines = r.lines.map(l=>`${l.debit?'+':''}${money(l.debit||0)} / ${money(l.credit||0)}`).join('<br/>');
-    return `<tr><td>${r.date}</td><td>${r.memo}</td><td>${lines}</td></tr>`;
-  }).join('');
-}
-
-function bindExpense() {
-  const exNet = qs('#exNet'); const exRate = qs('#exVatRate'); const exTotal = qs('#exTotal');
-  function recalc(){ const net=parseFloat(exNet.value||'0'); const rate=parseFloat(exRate.value||'0'); exTotal.value=(net*(1+rate/100)).toFixed(2); }
-  exNet.addEventListener('input', recalc); exRate.addEventListener('input', recalc);
-
-  // categories from accounts (expense type)
-  (async () => {
-    const accounts = await getAll('accounts');
-    const exp = accounts.filter(a=>a.type==='expense');
-    qs('#exCategory').innerHTML = exp.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
-  })();
-
-  qs('#expenseForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const ex = {
-      date: qs('#exDate').value || new Date().toISOString().slice(0,10),
-      supplier: qs('#exSupplier').value,
-      categoryAccountId: parseInt(qs('#exCategory').value),
-      net: parseFloat(qs('#exNet').value||'0'),
-      vatRate: parseFloat(qs('#exVatRate').value||'0'),
-      payMethod: 'bank'
-    };
-    await postExpense(ex);
-    e.target.reset();
-    await refreshKPIs();
-    await refreshJournal();
-    alert('Expense posted.');
-  };
-}
-
-function bindReports() {
-  qs('#repPeriod').value = new Date().toISOString().slice(0,7);
-  qs('#runReports').onclick = async () => {
-    const p = qs('#repPeriod').value;
-    const pnl = await reportPNL(p);
-    const bs  = await reportBalanceSheet(p);
-    const vat = await reportVAT(p);
-    const comm= await reportCommission(p);
-    const pnlBody = qs('#pnlTable tbody');
-    pnlBody.innerHTML = pnl.rows.map(r=>`<tr><td>${r.account}</td><td>${money(r.amount)}</td></tr>`).join('') +
-      `<tr><th>Total Income</th><th>${money(pnl.totalIncome)}</th></tr>` +
-      `<tr><th>Total Expenses</th><th>${money(pnl.totalExpense)}</th></tr>` +
-      `<tr><th>Net Profit</th><th>${money(pnl.net)}</th></tr>`;
-    const bsBody = qs('#bsTable tbody');
-    bsBody.innerHTML = bs.map(r=>`<tr><td>${r.account}</td><td>${money(r.amount)}</td></tr>`).join('');
-    const vatBody = qs('#vatTable tbody');
-    vatBody.innerHTML = `<tr><td>Output VAT</td><td>${money(vat.output)}</td></tr>
-                         <tr><td>Input VAT</td><td>${money(vat.input)}</td></tr>
-                         <tr><th>VAT Due</th><th>${money(vat.net)}</th></tr>`;
-    const commBody = qs('#commTable tbody');
-    commBody.innerHTML = comm.map(c=>`<tr><td>${c.name}</td><td>${money(c.commission)}</td></tr>`).join('');
-  };
-}
-
-function bindData() {
-  qs('#exportJson').onclick = async () => {
-    const stores = ['accounts','journal_entries','takings','expenses','services','materials','service_materials','stylists','operations','settings','analyses'];
-    const out = {};
-    for (const s of stores) out[s] = await getAll(s);
-    const blob = new Blob([JSON.stringify(out, null, 2)], { type:'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'salon-accounting-backup.json';
-    a.click();
-  };
-  qs('#importJson').onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const txt = await file.text();
-    const data = JSON.parse(txt);
-    // naive restore: clear and re-add
-    alert('Import will replace current data on next version (for MVP manual merge). For now, please start fresh.');
-  };
-}
-
-function bindCostAnalyzer() {
-  const listDiv = document.getElementById('materialsList');
-  function addMaterialRow() {
-    const row = document.createElement('div');
-    row.className = 'row';
-    row.innerHTML = `<input placeholder="Material name" class="matName"/>
-                     <input type="number" step="0.001" placeholder="Units" class="matUnits" style="max-width:120px"/>
-                     <input type="number" step="0.001" placeholder="€ per unit" class="matCost" style="max-width:140px"/>`;
-    listDiv.appendChild(row);
-  }
-  document.getElementById('addMaterial').onclick = () => addMaterialRow();
-  addMaterialRow(); // one by default
-
-  document.getElementById('serviceForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const mats = Array.from(document.querySelectorAll('#materialsList .row')).map(r => ({
-      name: r.querySelector('.matName').value,
-      units: parseFloat(r.querySelector('.matUnits').value||'0'),
-      costPerUnit: parseFloat(r.querySelector('.matCost').value||'0'),
-    }));
-    const model = {
-      name: document.getElementById('svcName').value,
-      priceNet: parseFloat(document.getElementById('svcPriceNet').value||'0'),
-      targetMargin: parseFloat(document.getElementById('svcTarget').value||'0'),
-      mins: parseFloat(document.getElementById('svcMins').value||'0'),
-      labourRate: parseFloat(document.getElementById('svcLabourRate').value||'0'),
-      overheadPerService: parseFloat(document.getElementById('svcOverhead').value||'0'),
-      materials: mats
-    };
-    const res = computeTrueCost(model);
-    document.getElementById('costResult').innerHTML = `
-      <div class="grid four">
-        <div class="kpi"><div class="kpi-label">Materials</div><div class="kpi-value">€${res.materials.toFixed(2)}</div></div>
-        <div class="kpi"><div class="kpi-label">Labour</div><div class="kpi-value">€${res.labour.toFixed(2)}</div></div>
-        <div class="kpi"><div class="kpi-label">Overheads</div><div class="kpi-value">€${res.ops.toFixed(2)}</div></div>
-        <div class="kpi"><div class="kpi-label">True Cost</div><div class="kpi-value">€${res.trueCost.toFixed(2)}</div></div>
-      </div>
-      <p><strong>Margin:</strong> ${res.marginPct.toFixed(1)}% (target ${model.targetMargin}%)</p>
-      <p><em>Price suggestion to hit target:</em> €${ (res.trueCost / (1 - model.targetMargin/100)).toFixed(2) }</p>
-    `;
-    await saveAnalysis(model);
+    const out = Cost.computeCost(params);
+    document.getElementById('cost-output').innerHTML = `
+      Materials: €${out.materialsCost.toFixed(2)} | Labour: €${out.labour.toFixed(2)} | Overhead: €${out.overhead.toFixed(2)}<br>
+      True Cost: €${out.trueCost.toFixed(2)} | Price (net): €${out.priceNet.toFixed(2)}<br>
+      Margin: €${out.margin.toFixed(2)} (${out.marginPct.toFixed(1)}%)<br>
+      Suggested Price (gross): €${out.recommendation.toFixed(2)}`;
+    await Cost.saveAnalysis({ ...params, ...out });
     await refreshAnalyses();
-  };
-
-  async function refreshAnalyses() {
-    const rows = await listAnalyses();
-    const tb = document.querySelector('#analysisTable tbody');
-    tb.innerHTML = rows.map(r=>{
-      const gap = (r.result.marginPct - r.targetMargin);
-      return `<tr><td>${r.service}</td><td>€${r.priceNet.toFixed(2)}</td><td>€${r.result.trueCost.toFixed(2)}</td><td>${r.result.marginPct.toFixed(1)}%</td><td>${gap>=0?'+':''}${gap.toFixed(1)}%</td></tr>`;
-    }).join('');
-  }
-  refreshAnalyses();
+  });
 }
-
-window.addEventListener('load', init);
+async function refreshAnalyses(){
+  const rows = await DB.all('analyses');
+  const tbl = document.getElementById('cost-table');
+  const headers = ['Service','True Cost','Margin %','Suggested Gross'];
+  const trs = rows.slice(-50).reverse().map(r=>{
+    return `<tr><td>${r.service}</td><td>${r.trueCost.toFixed(2)}</td><td>${r.marginPct.toFixed(1)}</td><td>${r.recommendation.toFixed(2)}</td></tr>`;
+  });
+  tbl.innerHTML = `<tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>${trs.join('')}`;
+}
+function setupImport(){
+  const fileInput = document.getElementById('import-file');
+  document.getElementById('btn-parse').addEventListener('click', async ()=>{
+    const f = fileInput.files?.[0];
+    if(!f) return alert('Choose a CSV file first');
+    const text = await f.text();
+    const rows = Importer.parseCSV(text);
+    Importer.IMPORT_ROWS = rows;
+    Importer.previewImport(rows, document.getElementById('import-preview'));
+  });
+  document.getElementById('btn-apply').addEventListener('click', async ()=>{
+    if(!Importer.IMPORT_ROWS.length) return alert('Parse a file first');
+    await Importer.applyImport(Importer.IMPORT_ROWS);
+    alert('Applied');
+  });
+}
+function setupData(){
+  document.getElementById('btn-export').addEventListener('click', async ()=>{
+    const dump = {};
+    for(const s of ['settings','journal','takings','expenses','services','materials','service_materials','analyses']){
+      dump[s] = await DB.all(s);
+    }
+    const blob = new Blob([JSON.stringify(dump,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='salon-data.json'; a.click();
+    URL.revokeObjectURL(url);
+    document.getElementById('export-status').textContent = 'Exported salon-data.json';
+  });
+  document.getElementById('btn-restore').addEventListener('click', async ()=>{
+    const f = document.getElementById('restore-file').files?.[0];
+    if(!f) return alert('Choose a JSON file first');
+    const text = await f.text();
+    const dump = JSON.parse(text);
+    for(const s of ['settings','journal','takings','expenses','services','materials','service_materials','analyses']){
+      await DB.clear(s);
+      for(const row of dump[s]||[]) await DB.add(s,row);
+    }
+    alert('Restored');
+  });
+}
+async function main(){
+  initTabs();
+  seed();
+  await loadSettings();
+  document.getElementById('btn-save-settings').addEventListener('click', (e)=>{ e.preventDefault(); saveSettings(); });
+  setupTakings();
+  setupExpense();
+  setupReports();
+  setupCost();
+  setupImport();
+  setupData();
+  await refreshRecent();
+  await refreshAnalyses();
+}
+document.addEventListener('DOMContentLoaded', main);

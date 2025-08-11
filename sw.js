@@ -1,22 +1,9 @@
 
-const CACHE = 'salon-acct-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  './styles.css',
-  './db.js',
-  './ledger.js',
-  './cost_analyzer.js',
-  './app.js',
-  './manifest.webmanifest'
-];
-
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+self.addEventListener('install', e=>{
+  e.waitUntil(caches.open('salon-acct-cache-v1').then(c=>c.addAll([
+    './','./index.html','./styles.css','./app.js','./db.js','./ledger.js','./reports.js','./cost.js','./importer.js','./manifest.webmanifest'
+  ])));
 });
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(resp => resp || fetch(event.request))
-  );
+self.addEventListener('fetch', e=>{
+  e.respondWith(caches.match(e.request).then(r=> r || fetch(e.request)));
 });
