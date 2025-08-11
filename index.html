@@ -1,232 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Salon Accounting</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Salon Accounts (Local PWA)</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#111111"/>
 </head>
 <body>
   <header class="app-header">
-    <h1>Salon Accounting</h1>
-    <nav class="tabs">
-      <button class="tab-btn" data-tab="accounting">Accounting</button>
-      <button class="tab-btn" data-tab="expenses">Expenses</button>
-      <button class="tab-btn" data-tab="cost">Cost Analyzer</button>
-      <button class="tab-btn" data-tab="catalog">Service Catalog</button>
-      <button class="tab-btn" data-tab="reports">Reports</button>
-      <button class="tab-btn" data-tab="settings">Settings</button>
+    <div class="brand">Salon Accounts</div>
+    <nav class="tabs" id="tabbar">
+      <button data-tab="takings" class="tab active">Sales & Takings</button>
+      <button data-tab="expenses" class="tab">Expenses</button>
+      <button data-tab="catalog" class="tab">Service Catalog</button>
+      <button data-tab="materials" class="tab">Materials</button>
+      <button data-tab="analyzer" class="tab">Cost Analyzer</button>
+      <button data-tab="reports" class="tab">Reports</button>
+      <button data-tab="settings" class="tab">Settings</button>
+      <button data-tab="data" class="tab">Data</button>
     </nav>
   </header>
 
   <main>
-    <!-- Accounting -->
-    <section id="tab-accounting" class="tab">
-      <h2>Takings</h2>
-      <div class="row">
-        <label>Mode</label>
-        <select id="takings-mode">
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly total</option>
-        </select>
-      </div>
-      <div class="row">
-        <label id="date-label">Date</label>
-        <input id="takings-date" type="date" placeholder="YYYY-MM-DD"/>
-        <span class="hint">If your browser doesn't show a picker, type YYYY-MM-DD</span>
-      </div>
-      <div class="row" id="week-range" style="display:none">
-        <label>Week Ending</label>
-        <input id="takings-week" type="date" placeholder="YYYY-MM-DD"/>
-      </div>
+    <!-- Sales & Takings -->
+    <section data-section="takings" class="section active">
+      <div class="card">
+        <h2>Sales & Takings</h2>
+        <div class="row gap">
+          <label>Mode
+            <select id="takings-mode">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly total</option>
+            </select>
+          </label>
+          <label>Date
+            <input type="date" id="takings-date" />
+          </label>
+          <label class="hidden" id="week-label">Week Ending
+            <input type="date" id="takings-week-end" />
+          </label>
+        </div>
 
-      <details class="card">
-        <summary>Service Lines (use for exact COGS)</summary>
-        <div class="row">
-          <label>Add service</label>
-          <select id="service-select"></select>
-          <input id="service-qty" type="number" min="1" value="1"/>
-          <button id="add-service-line" class="btn">Add</button>
+        <h3>Service Lines (exact COGS)</h3>
+        <div class="row gap">
+          <label>Service
+            <select id="service-select"></select>
+          </label>
+          <label>Qty
+            <input type="number" id="service-qty" min="1" step="1" value="1"/>
+          </label>
+          <button id="add-service" class="btn">Add</button>
         </div>
         <table id="service-lines" class="table">
-          <thead><tr><th>Service</th><th>Qty</th><th>Price</th><th>Total</th><th>COGS/unit</th><th>COGS</th><th></th></tr></thead>
+          <thead><tr><th>Service</th><th>Qty</th><th>Unit Price</th><th>Line Total</th><th>COGS (est)</th><th></th></tr></thead>
           <tbody></tbody>
+          <tfoot><tr><td colspan="3" class="right">Services Gross:</td><td id="services-gross">€0.00</td><td id="services-cogs">€0.00</td><td></td></tr></tfoot>
         </table>
-      </details>
 
-      <div class="grid two">
-        <div class="card">
-          <h3>Totals</h3>
-          <div class="row"><label>Services Gross (€)</label><input id="services-gross" type="number" step="0.01"/></div>
-          <div class="row"><label>Retail Gross (€)</label><input id="retail-gross" type="number" step="0.01"/></div>
-          <div class="row"><label>Cash (€)</label><input id="cash" type="number" step="0.01"/></div>
-          <div class="row"><label>Card (€)</label><input id="card" type="number" step="0.01"/></div>
+        <h3>Retail & Payments</h3>
+        <div class="row gap">
+          <label>Retail Gross (€)
+            <input type="number" id="retail-gross" min="0" step="0.01" value="0"/>
+          </label>
+          <label>Discounts (€)
+            <input type="number" id="discounts" min="0" step="0.01" value="0"/>
+          </label>
+          <label>Voucher Sales (€)
+            <input type="number" id="voucher-sales" min="0" step="0.01" value="0"/>
+          </label>
+          <label>Voucher Redemptions (€)
+            <input type="number" id="voucher-redemptions" min="0" step="0.01" value="0"/>
+          </label>
         </div>
-        <div class="card">
-          <h3>VAT</h3>
-          <div class="row">
-            <label>VAT Mode</label>
-            <select id="vat-mode">
-              <option value="include">Prices include VAT</option>
-              <option value="add">Add VAT on top</option>
-            </select>
-          </div>
-          <div class="row"><label>VAT %</label><input id="vat-rate" type="number" step="0.01" value="23"/></div>
-          <div class="kpis">
-            <div><span>Net Sales</span><strong id="kpi-net">€0.00</strong></div>
-            <div><span>VAT</span><strong id="kpi-vat">€0.00</strong></div>
-            <div><span>COGS</span><strong id="kpi-cogs">€0.00</strong></div>
-          </div>
+        <div class="row gap">
+          <label>Cash (€)
+            <input type="number" id="cash" min="0" step="0.01" value="0"/>
+          </label>
+          <label>Card (€)
+            <input type="number" id="card" min="0" step="0.01" value="0"/>
+          </label>
+        </div>
+        <div class="row gap">
+          <button id="post-takings" class="btn primary">Post Takings</button>
+          <div id="takings-status" class="status"></div>
         </div>
       </div>
-
-      <div class="actions">
-        <button id="post-takings" class="btn primary">Post Takings</button>
-      </div>
-      <div id="acc-msg" class="msg"></div>
     </section>
 
     <!-- Expenses -->
-    <section id="tab-expenses" class="tab">
-      <h2>Expenses</h2>
-      <div class="row"><label>Date</label><input id="exp-date" type="date" placeholder="YYYY-MM-DD"></div>
-      <div class="row"><label>Supplier</label><input id="exp-supplier" type="text"></div>
-      <div class="row"><label>Category</label><input id="exp-category" type="text" placeholder="e.g., Utilities"></div>
-      <div class="row"><label>Net (€)</label><input id="exp-net" type="number" step="0.01"></div>
-      <div class="row"><label>VAT %</label><input id="exp-vat" type="number" step="0.01" value="23"></div>
-      <div class="row"><label>Total (€)</label><input id="exp-total" type="number" step="0.01" readonly></div>
-      <div class="actions"><button id="post-expense" class="btn">Post Expense</button></div>
-      <div id="exp-msg" class="msg"></div>
-      <h3>Recent Expenses</h3>
-      <table class="table" id="expenses-table">
-        <thead><tr><th>Date</th><th>Supplier</th><th>Category</th><th>Net</th><th>VAT</th><th>Total</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- Cost Analyzer -->
-    <section id="tab-cost" class="tab">
-      <h2>Cost Analyzer</h2>
-      <div class="row">
-        <label>Select service</label>
-        <select id="ca-service-select"></select>
-        <button id="ca-load" class="btn">Load</button>
-      </div>
-
-      <details class="card" open>
-        <summary>Working Table (editable inputs)</summary>
-        <div class="grid three">
-          <div class="row"><label>Retail Price (€)</label><input id="ca-price" type="number" step="0.01"></div>
-          <div class="row"><label>Time (mins)</label><input id="ca-mins" type="number" step="1"></div>
-          <div class="row"><label>Utilities €/hr</label><input id="ca-utilsHr" type="number" step="0.01"></div>
-          <div class="row"><label>Product/Supplies (€)</label><input id="ca-supplies" type="number" step="0.01"></div>
-          <div class="row"><label>Labour (€)</label><input id="ca-labour" type="number" step="0.01"></div>
-          <div class="row"><label>Other Ops (€)</label><input id="ca-ops" type="number" step="0.01" value="0"></div>
+    <section data-section="expenses" class="section">
+      <div class="card">
+        <h2>Expenses</h2>
+        <div class="row gap">
+          <label>Date
+            <input type="date" id="exp-date"/>
+          </label>
+          <label>Supplier
+            <input type="text" id="exp-supplier" placeholder="Supplier Ltd."/>
+          </label>
+          <label>Category
+            <select id="exp-category"></select>
+          </label>
         </div>
-        <div class="actions">
-          <button id="ca-recalc" class="btn">Recalculate</button>
-          <button id="ca-add-to-catalog" class="btn">Save to Catalog</button>
+        <div class="row gap">
+          <label>Net (€)
+            <input type="number" id="exp-net" min="0" step="0.01" value="0"/>
+          </label>
+          <label>VAT Rate
+            <select id="exp-vat-rate">
+              <option value="0.23">23%</option>
+              <option value="0.13">13.5%</option>
+              <option value="0.09">9%</option>
+              <option value="0">0%</option>
+            </select>
+          </label>
+          <button id="post-expense" class="btn">Post</button>
+          <div id="exp-status" class="status"></div>
         </div>
-      </details>
-
-      <details class="card">
-        <summary>Review Table (computed, collapsible)</summary>
-        <table class="table">
-          <tbody>
-            <tr><td>Utilities cost (mins × €/hr ÷ 60)</td><td id="rv-utils">€0.00</td></tr>
-            <tr><td>Product/Supplies</td><td id="rv-supplies">€0.00</td></tr>
-            <tr><td>Labour</td><td id="rv-labour">€0.00</td></tr>
-            <tr><td>Other Ops</td><td id="rv-ops">€0.00</td></tr>
-            <tr><td><strong>Total Cost</strong></td><td id="rv-total">€0.00</td></tr>
-            <tr><td>Margin €</td><td id="rv-margin">€0.00</td></tr>
-            <tr><td>Margin %</td><td id="rv-marginPct">0%</td></tr>
-            <tr><td>Suggested Price @ 65% GM</td><td id="rv-suggest">€0.00</td></tr>
-          </tbody>
+        <h3>Recent Expenses</h3>
+        <table class="table" id="exp-table">
+          <thead><tr><th>Date</th><th>Supplier</th><th>Category</th><th>Net</th><th>VAT</th><th>Total</th></tr></thead>
+          <tbody></tbody>
         </table>
-      </details>
-
-      <div id="ca-msg" class="msg"></div>
+      </div>
     </section>
 
     <!-- Service Catalog -->
-    <section id="tab-catalog" class="tab">
-      <h2>Service Catalog</h2>
-      <div class="actions">
-        <button id="export-price-list" class="btn">Export Price List (Print/PDF)</button>
+    <section data-section="catalog" class="section">
+      <div class="card">
+        <h2>Service Catalog</h2>
+        <div class="row gap">
+          <button id="add-service-row" class="btn">Add Service</button>
+          <button id="export-price-list" class="btn">Export Price List</button>
+        </div>
+        <table class="table" id="catalog-table">
+          <thead>
+            <tr><th>Service</th><th>Price (€ incl VAT)</th><th>Mins</th><th>Products (€)</th><th>Utilities (€)</th><th>Labour (€)</th><th>Total Cost (€)</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <table class="table" id="catalog-table">
-        <thead><tr><th>Service</th><th>Price</th><th>Mins</th><th>Supplies</th><th>Utilities/hr</th><th>Labour</th><th>Total Cost</th><th></th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <h3>Add / Edit</h3>
-      <div class="grid three">
-        <input id="svc-name" placeholder="Service name">
-        <input id="svc-price" type="number" step="0.01" placeholder="Retail price">
-        <input id="svc-mins" type="number" step="1" placeholder="Time (mins)">
-        <input id="svc-supplies" type="number" step="0.01" placeholder="Product/Supplies (€)">
-        <input id="svc-utilsHr" type="number" step="0.01" placeholder="Utilities €/hr">
-        <input id="svc-labour" type="number" step="0.01" placeholder="Labour (€)">
-        <input id="svc-total" type="number" step="0.01" placeholder="Total cost">
+    </section>
+
+    <!-- Materials -->
+    <section data-section="materials" class="section">
+      <div class="card">
+        <h2>Materials & Usage</h2>
+        <div class="row gap">
+          <label>Service
+            <select id="usage-service-select"></select>
+          </label>
+          <button id="add-usage-row" class="btn">Add Usage Row</button>
+        </div>
+        <table class="table" id="usage-table">
+          <thead><tr><th>SKU</th><th>Name</th><th>Unit</th><th>Cost/Unit (€)</th><th>Qty Used</th><th>Line Cost (€)</th><th></th></tr></thead>
+          <tbody></tbody>
+          <tfoot><tr><td colspan="5" class="right">Products Cost (auto):</td><td id="usage-total">€0.00</td><td></td></tr></tfoot>
+        </table>
+        <h3>SKU Price List</h3>
+        <div class="row gap">
+          <button id="add-sku" class="btn">Add SKU</button>
+        </div>
+        <table class="table" id="sku-table">
+          <thead><tr><th>SKU</th><th>Name</th><th>Unit</th><th>Cost/Unit (€)</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <div class="actions">
-        <button id="svc-save" class="btn primary">Save Service</button>
+    </section>
+
+    <!-- Cost Analyzer -->
+    <section data-section="analyzer" class="section">
+      <div class="card">
+        <h2>Cost Analyzer</h2>
+        <div class="row gap">
+          <label>Service
+            <select id="analyzer-service"></select>
+          </label>
+          <button id="load-service-into-analyzer" class="btn">Load</button>
+          <label>Target Margin %
+            <input type="number" id="target-margin" min="0" max="95" step="1" value="65"/>
+          </label>
+        </div>
+
+        <details open>
+          <summary>Working Table (editable)</summary>
+          <div class="row gap">
+            <label>Retail Price (€ incl VAT) <input type="number" id="w-price" step="0.01" /></label>
+            <label>Time (mins) <input type="number" id="w-mins" step="1" /></label>
+            <label>Utilities €/hr <input type="number" id="w-utils-per-hour" step="0.01" /></label>
+            <label>Products/Supplies (€) <input type="number" id="w-products" step="0.01" /></label>
+            <label>Labour (€) <input type="number" id="w-labour" step="0.01" /></label>
+            <label>Other Ops (€) <input type="number" id="w-ops" step="0.01" value="0"/></label>
+            <button id="recalc" class="btn">Recalculate</button>
+            <button id="save-to-catalog" class="btn">Save to Catalog</button>
+          </div>
+        </details>
+
+        <details>
+          <summary>Review Table (computed)</summary>
+          <table class="table">
+            <tbody>
+              <tr><td>Utilities Cost</td><td id="r-utils">€0.00</td></tr>
+              <tr><td>Total Cost</td><td id="r-total">€0.00</td></tr>
+              <tr><td>Price (net of VAT)</td><td id="r-price-net">€0.00</td></tr>
+              <tr><td>Margin €</td><td id="r-margin-eur">€0.00</td></tr>
+              <tr><td>Margin %</td><td id="r-margin-pct">0%</td></tr>
+              <tr><td>Suggested Price (incl VAT)</td><td id="r-suggested">€0.00</td></tr>
+            </tbody>
+          </table>
+        </details>
       </div>
-      <div id="cat-msg" class="msg"></div>
     </section>
 
     <!-- Reports -->
-    <section id="tab-reports" class="tab">
-      <h2>Reports</h2>
-      <div class="row"><label>From</label><input id="rep-from" type="date" placeholder="YYYY-MM-DD"></div>
-      <div class="row"><label>To</label><input id="rep-to" type="date" placeholder="YYYY-MM-DD"></div>
-      <div class="actions"><button id="run-reports" class="btn">Run</button></div>
-      <div class="grid two">
-        <div class="card">
-          <h3>Monthly Accounts (One‑Pager)</h3>
-          <table class="table" id="monthly-table">
-            <tbody></tbody>
-          </table>
+    <section data-section="reports" class="section">
+      <div class="card">
+        <h2>Reports</h2>
+        <div class="row gap">
+          <label>From <input type="date" id="rep-from" /></label>
+          <label>To <input type="date" id="rep-to" /></label>
+          <button id="run-reports" class="btn">Run</button>
         </div>
-        <div class="card">
-          <h3>Financial Statements</h3>
-          <table class="table" id="pl-table"><thead><tr><th>P&L</th><th>€</th></tr></thead><tbody></tbody></table>
-          <table class="table" id="bs-table"><thead><tr><th>Balance Sheet</th><th>€</th></tr></thead><tbody></tbody></table>
-          <table class="table" id="vat-table"><thead><tr><th>VAT Summary</th><th>€</th></tr></thead><tbody></tbody></table>
+        <div id="reports-output" class="stack"></div>
+        <div class="row gap">
+          <label>Month <input type="month" id="close-month" /></label>
+          <button id="close-month-btn" class="btn">Close Month (COGS Summary + Lock)</button>
+          <div id="close-status" class="status"></div>
         </div>
       </div>
     </section>
 
     <!-- Settings -->
-    <section id="tab-settings" class="tab">
-      <h2>Settings</h2>
-      <div class="row"><label>Default VAT %</label><input id="set-vat" type="number" step="0.01" value="23"></div>
-      <div class="row"><label>VAT Mode</label>
-        <select id="set-vat-mode">
-          <option value="include">Include VAT</option>
-          <option value="add">Add VAT</option>
-        </select>
-      </div>
-      <details class="card">
-        <summary>Utilities (€/hr breakdown)</summary>
+    <section data-section="settings" class="section">
+      <div class="card">
+        <h2>Settings</h2>
+        <div class="row gap">
+          <label>VAT Mode
+            <select id="vat-mode">
+              <option value="include">Prices include VAT</option>
+              <option value="add">Add VAT on top</option>
+            </select>
+          </label>
+          <label>VAT Rate
+            <input type="number" id="vat-rate" step="0.01" value="0.23"/>
+          </label>
+        </div>
+        <h3>Utilities Breakdown (€/month)</h3>
+        <p>These roll up to a computed €/hour used by the Analyzer by default.</p>
         <table class="table" id="utils-table">
-          <thead><tr><th>Item</th><th>Monthly</th><th>Yearly</th><th>€/hr</th></tr></thead>
+          <thead><tr><th>Utility</th><th>€ / month</th><th></th></tr></thead>
           <tbody></tbody>
+          <tfoot><tr><td class="right">€/hour total:</td><td id="utils-hour">€0.00</td><td></td></tr></tfoot>
         </table>
-        <div class="row"><label>Total €/hr</label><input id="utils-total" type="number" step="0.01"></div>
-      </details>
-      <div class="actions">
-        <button id="save-settings" class="btn">Save Settings</button>
+        <button id="add-util" class="btn">Add Utility</button>
       </div>
-      <div id="set-msg" class="msg"></div>
+    </section>
+
+    <!-- Data -->
+    <section data-section="data" class="section">
+      <div class="card">
+        <h2>Data</h2>
+        <div class="row gap">
+          <button id="export-json" class="btn">Export JSON</button>
+          <input type="file" id="import-json" accept="application/json"/>
+        </div>
+      </div>
     </section>
   </main>
 
-  <footer class="footer">Local‑first • Offline‑ready • Your data stays on this device</footer>
-
-  <script src="seed.js"></script>
-  <script src="store.js"></script>
-  <script src="logic.js"></script>
+  <footer class="app-footer">Local‑first PWA • Your data stays on this device</footer>
+  <script src="lib-idb.js"></script>
+  <script src="seed-data.js"></script>
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
 </body>
 </html>
