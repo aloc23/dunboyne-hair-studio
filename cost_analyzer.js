@@ -1,46 +1,67 @@
+import { DB } from './db.js';
 
-function currency(x){ return (Number(x)||0).toFixed(2); }
+function fmt(n){ return '€'+(Math.round(n*100)/100).toFixed(2); }
 
-function initCostAnalyzer(seed){
-  const svcSel = document.getElementById('ca-service');
-  svcSel.innerHTML = '';
-  seed.services.forEach(s=>{
-    const o = document.createElement('option'); o.value=s.id; o.textContent=s.name; svcSel.appendChild(o);
-  });
-  svcSel.addEventListener('change', renderCA);
-  ['ca-minutes','ca-target','ca-overhead','ca-labour','ca-vat'].forEach(id=>document.getElementById(id).addEventListener('input', renderCA));
-  renderCA();
-  function renderCA(){
-    const sid = svcSel.value;
-    const mins = Number(document.getElementById('ca-minutes').value||0);
-    const overhead = Number(document.getElementById('ca-overhead').value||0);
-    const labour = Number(document.getElementById('ca-labour').value||0);
-    const vat = Number(document.getElementById('ca-vat').value||0);
-    const target = Number(document.getElementById('ca-target').value||0)/100.0;
-    const mats = seed.service_materials.filter(x=>x.serviceId===sid);
-    const matRows = mats.map(m=>{
-      const mat = seed.materials.find(mm=>mm.id===m.materialId);
-      const cost = (m.unitsPerService * (mat.costPerUnit||0));
-      return {name: mat.name, qty: m.unitsPerService, unit: mat.unit, cpu: mat.costPerUnit, cost};
-    });
-    const materialsCost = matRows.reduce((s,r)=>s+r.cost,0);
-    const labourCost = mins * labour;
-    const overheadCost = mins * overhead;
-    const trueCost = materialsCost + labourCost + overheadCost;
-    // price suggestion net to hit target margin
-    const priceNet = trueCost/(1-target);
-    const priceGross = priceNet * (1+vat);
-    const html = `
-      <div class="kpi"><div class="kpi"><h3>Materials</h3><div class="v">€ ${currency(materialsCost)}</div></div>
-      <div class="kpi"><h3>Labour</h3><div class="v">€ ${currency(labourCost)}</div></div>
-      <div class="kpi"><h3>Overhead</h3><div class="v">€ ${currency(overheadCost)}</div></div>
-      <div class="kpi"><h3>True Cost</h3><div class="v">€ ${currency(trueCost)}</div></div>
-      <div class="kpi"><h3>Suggest Net</h3><div class="v">€ ${currency(priceNet)}</div></div>
-      <div class="kpi"><h3>Suggest Gross</h3><div class="v">€ ${currency(priceGross)}</div></div>`;
-    document.getElementById('ca-output').innerHTML = html;
-    // materials table
-    const mhtml = '<table><tr><th>Material</th><th>Qty</th><th>Unit</th><th>€/unit</th><th>Cost</th></tr>' +
-      matRows.map(r=>`<tr><td>${r.name}</td><td>${r.qty}</td><td>${r.unit}</td><td>${currency(r.cpu)}</td><td>€ ${currency(r.cost)}</td></tr>`).join('') + '</table>';
-    document.getElementById('materials-list').innerHTML = mhtml;
+async function loadCatalog(){
+  const services = await DB.getAll('services');
+  const materials = await DB.getAll('materials');
+  const maps = await DB.getAll('service_materials');
+  return {services, materials, maps};
+}
+
+async function populateServiceDropdown(){
+  const {services} = await loadCatalog();
+  const sel = document.getElementById('costService');
+  sel.innerHTML = '';
+  for(const s of services){
+    const opt = document.createElement('option'); opt.value=s.id; opt.textContent=s.name; sel.appendChild(opt);
   }
 }
+
+async function calculate(){
+  const {services, materials, maps} = await loadCatalog();
+  const sid = document.getElementById('costService').value;
+  const mins = Number(document.getElementById('costMinutes').value||0);
+  const lab = Number(document.getElementById('labourPerMin').value||0);
+  const oh  = Number(document.getElementById('overheadPerMin').value||0);
+  const target = Number(document.getElementById('targetMargin').value||0)/100;
+
+  const s = services.find(x=>x.id===sid);
+  const mFor = maps.filter(m=>m.serviceId===sid);
+  let materialsCost = 0;
+  const lines = [];
+  for(const m of mFor){
+    const mat = materials.find(x=>x.id===m.materialId);
+    const c = (mat?.costPerUnit||0) * (m.unitsPerService||0);
+    materialsCost += c;
+    lines.push(`<tr><td>${mat?.name||m.materialId}</td><td>${m.unitsPerService} ${mat?.unit||''}</td><td>${fmt(mat?.costPerUnit||0)}</td><td>${fmt(c)}</td></tr>`);
+  }
+  const labourCost = mins*lab;
+  const overheadCost = mins*oh;
+  const trueCost = materialsCost + labourCost + overheadCost;
+  const priceNet = s?.price||0;
+  const margin = priceNet>0 ? (priceNet - trueCost)/priceNet : 0;
+  const recommended = trueCost/(1-target||1);
+
+  const out = `
+  <table>
+    <thead><tr><th>Item</th><th>Qty</th><th>Unit Cost</th><th>Total</th></tr></thead>
+    <tbody>${lines.join('')}</tbody>
+    <tfoot>
+      <tr><td>Materials</td><td></td><td></td><td>${fmt(materialsCost)}</td></tr>
+      <tr><td>Labour</td><td>${mins} min</td><td>${fmt(lab)}/min</td><td>${fmt(labourCost)}</td></tr>
+      <tr><td>Overhead</td><td>${mins} min</td><td>${fmt(oh)}/min</td><td>${fmt(overheadCost)}</td></tr>
+      <tr><td><strong>True Cost</strong></td><td></td><td></td><td><strong>${fmt(trueCost)}</strong></td></tr>
+      <tr><td>Current Net Price</td><td></td><td></td><td>${fmt(priceNet)}</td></tr>
+      <tr><td>Margin %</td><td></td><td></td><td>${(margin*100).toFixed(1)}%</td></tr>
+      <tr><td>Recommended Net Price @ ${(target*100).toFixed(0)}%</td><td></td><td></td><td>${fmt(recommended)}</td></tr>
+    </tfoot>
+  </table>`;
+  document.getElementById('costOut').innerHTML = out;
+}
+
+export async function initCost(){
+  await populateServiceDropdown();
+}
+document.getElementById('calcCost').addEventListener('click', calculate);
+document.addEventListener('tab:cost', initCost);

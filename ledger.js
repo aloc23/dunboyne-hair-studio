@@ -1,169 +1,120 @@
-
-// Ledger util
-const Ledger = {
-  postTakings({date, weekStart, weekEnd, servicesGross, retailGross, cashIn, cardIn, vouchersIn, vouchersOut, refunds, vatMode, vatRate}){
-    // Normalize amounts
-    const g = (x)=>Math.max(0, Number(x||0));
-    servicesGross=g(servicesGross); retailGross=g(retailGross); cashIn=g(cashIn); cardIn=g(cardIn); vouchersIn=g(vouchersIn); vouchersOut=g(vouchersOut); refunds=g(refunds);
-    vatRate = Number(vatRate);
-    // Split net/VAT for sales
-    function split(gross){
-      if(vatMode==='include'){ const net = gross/(1+vatRate); return {net, vat: gross-net}; }
-      else { const net = gross; return {net, vat: gross*vatRate}; }
-    }
-    const svc = split(servicesGross);
-    const rtl = split(retailGross);
-
-    // Build journal lines
-    const lines = [];
-    // cash/bank
-    if(cashIn>0) lines.push({account:'Cash', debit:cashIn, credit:0});
-    if(cardIn>0) lines.push({account:'Bank', debit:cardIn, credit:0});
-    // vouchers sold is liability
-    if(vouchersIn>0) lines.push({account:'Cash', debit:vouchersIn, credit:0});
-    if(vouchersIn>0) lines.push({account:'Unearned Revenue (Vouchers)', debit:0, credit:vouchersIn});
-
-    // revenue
-    if(svc.net>0) lines.push({account:'Sales - Services', debit:0, credit:svc.net});
-    if(rtl.net>0) lines.push({account:'Sales - Retail', debit:0, credit:rtl.net});
-    const outVat = svc.vat + rtl.vat;
-    if(outVat>0) lines.push({account:'VAT Payable', debit:0, credit:outVat});
-
-    // voucher redemption reduces liability and credits sales
-    if(vouchersOut>0){
-      const v = split(vouchersOut);
-      lines.push({account:'Unearned Revenue (Vouchers)', debit:vouchersOut, credit:0});
-      lines.push({account:'Sales - Services', debit:0, credit:v.net}); // assume service redemption
-      if(v.vat>0) lines.push({account:'VAT Payable', debit:0, credit:v.vat});
-    }
-    // refunds
-    if(refunds>0){
-      const r = split(refunds);
-      lines.push({account:'Sales - Services', debit:r.net, credit:0});
-      if(r.vat>0) lines.push({account:'VAT Payable', debit:r.vat, credit:0});
-      lines.push({account:'Cash', debit:0, credit:refunds});
-    }
-
-    // Save journal entry
-    const id = 'J'+(DB.data.journal.length+1).toString().padStart(5,'0');
-    const memo = (weekStart && weekEnd) ? `Takings week ${weekStart}..${weekEnd}` : `Takings ${date}`;
-    DB.data.journal.push({id, date: (weekEnd||date), memo, lines});
-    DB.data.takings.push({id, date, weekStart, weekEnd, servicesGross, retailGross, cashIn, cardIn, vouchersIn, vouchersOut, refunds, vatMode, vatRate});
-    DB.save();
-    return id;
-  },
-
-  postExpense({date, supplier, category, net, vatRate, total}){
-    net = Number(net||0); vatRate = Number(vatRate||0);
-    if(!total){ total = net*(1+vatRate); }
-    total = Number(total);
-    const vatAmt = total - net;
-    const lines = [
-      {account:`Expense - ${category}`, debit:net, credit:0},
-    ];
-    if(vatAmt>0) lines.push({account:'VAT Input', debit:vatAmt, credit:0});
-    lines.push({account:'Cash', debit:0, credit:total});
-
-    const id = 'J'+(DB.data.journal.length+1).toString().padStart(5,'0');
-    DB.data.journal.push({id, date, memo:`Expense ${supplier}`, lines});
-    DB.data.expenses.push({id, date, supplier, category, net, vatRate, total});
-    DB.save();
-    return id;
-  },
-
-  // Trial balance between dates
-  balances(from, to){
-    const f = from? new Date(from): new Date('1970-01-01');
-    const t = to? new Date(to): new Date('2999-12-31');
-    const bal = {};
-    DB.data.journal.forEach(j=>{
-      const d = new Date(j.date);
-      if(d>=f && d<=t){
-        j.lines.forEach(l=>{
-          bal[l.account] = bal[l.account] || 0;
-          bal[l.account] += Number(l.debit||0) - Number(l.credit||0);
-        });
-      }
-    });
-    return bal;
-  },
-
-  pl(from, to){
-    const bal = this.balances(from, to);
-    const incomeAcc = Object.keys(bal).filter(a=>a.startsWith('Sales'));
-    const expenseAcc = Object.keys(bal).filter(a=>a.startsWith('Expense'));
-    const income = incomeAcc.reduce((s,a)=> s - Math.min(0, bal[a]) + Math.max(0, -bal[a]), 0);
-    // simpler: sum credits of Sales from journal directly
-    let sales = 0;
-    DB.data.journal.forEach(j=>{
-      const d=new Date(j.date); if((!from||d>=new Date(from)) && (!to||d<=new Date(to))){
-        j.lines.forEach(l=>{ if(l.account.startsWith('Sales')) sales += Number(l.credit||0) - Number(l.debit||0); });
-      }
-    });
-    // COGS not auto-posted; zero for MVP
-    const cogs = 0;
-    const expenses = expenseAcc.reduce((s,a)=> s + Math.max(0, bal[a]), 0);
-    const grossProfit = sales - cogs;
-    const operating = grossProfit - expenses;
-    return {sales, cogs, expenses, grossProfit, operating};
-  },
-
-  vatReport(from, to){
-    let out=0, inp=0;
-    DB.data.journal.forEach(j=>{
-      const d=new Date(j.date); if((!from||d>=new Date(from)) && (!to||d<=new Date(to))){
-        j.lines.forEach(l=>{
-          if(l.account==='VAT Payable') out += Number(l.credit||0) - Number(l.debit||0);
-          if(l.account==='VAT Input') inp += Number(l.debit||0) - Number(l.credit||0);
-        });
-      }
-    });
-    return {outputVAT: out, inputVAT: inp, net: out - inp};
-  },
-
-  balanceSheet(asOf){
-    const bal = this.balances(null, asOf);
-    function a(name){ return bal[name]||0; }
-    const assets = { Cash: a('Cash'), Bank: a('Bank'), Inventory: a('Inventory') };
-    const liabilities = { 'VAT Payable': (a('VAT Payable')<0? -a('VAT Payable'): a('VAT Payable')), 'Unearned Revenue (Vouchers)': (a('Unearned Revenue (Vouchers)')<0?-a('Unearned Revenue (Vouchers)'):a('Unearned Revenue (Vouchers)')) };
-    // Simple retained earnings approximation: sum of operating results to date
-    const pl = this.pl(null, asOf);
-    const equity = { 'Retained Earnings (approx)': pl.operating };
-    return {assets, liabilities, equity};
-  }
+// Ledger & reports
+const ACC = {
+  CASH: 'Cash',
+  BANK: 'Bank',
+  SALES_SVCS: 'Sales Services',
+  SALES_RETAIL: 'Sales Retail',
+  VAT_PAYABLE: 'VAT Payable',
+  VOUCHERS: 'Unearned Revenue',
+  COGS: 'Cost of Goods Sold',
+  INVENTORY: 'Inventory (Virtual)',
+  EXPENSE: 'Expenses'
 };
 
-// Wire UI buttons
-$('#post-takings').addEventListener('click', ()=>{
-  const payload = {
-    date: $('#takings-date').value,
-    weekStart: $('#week-start').value || null,
-    weekEnd: $('#week-end').value || null,
-    servicesGross: $('#services-gross').value,
-    retailGross: $('#retail-gross').value,
-    cashIn: $('#cash-in').value,
-    cardIn: $('#card-in').value,
-    vouchersIn: $('#vouchers-in').value,
-    vouchersOut: $('#vouchers-out').value,
-    refunds: $('#refunds').value,
-    vatMode: $('#vat-mode').value,
-    vatRate: Number($('#vat-rate').value)/100.0
-  };
-  const id = Ledger.postTakings(payload);
-  $('#takings-status').textContent = `Posted ${id}`;
-  setTimeout(()=>$('#takings-status').textContent='', 2000);
-});
+function splitVAT(amountIncl, rate){
+  const net = amountIncl / (1 + rate/100);
+  const vat = amountIncl - net;
+  return {net, vat};
+}
 
-$('#post-expense').addEventListener('click', ()=>{
-  const payload = {
-    date: $('#exp-date').value,
-    supplier: $('#exp-supplier').value,
-    category: $('#exp-category').value,
-    net: $('#exp-net').value,
-    vatRate: $('#exp-vat').value,
-    total: $('#exp-total').value
-  };
-  const id = Ledger.postExpense(payload);
-  $('#expense-status').textContent = `Posted ${id}`;
-  setTimeout(()=>$('#expense-status').textContent='', 2000);
-});
+async function postTakings({date, vatMode, vatRate, services, retailGross, cash, card, vouchers, refunds}){
+  // Compute totals from services
+  const servicesGross = services.reduce((s,l)=> s + l.qty * l.priceIncl, 0);
+  const servicesCOGS = services.reduce((s,l)=> s + l.qty * l.trueCost, 0);
+  const totalGross = servicesGross + retailGross - refunds;
+
+  const je = { date, memo:'Takings', lines: [] };
+  // Receipts
+  if(cash>0) je.lines.push({account:ACC.CASH, debit:+cash});
+  if(card>0) je.lines.push({account:ACC.BANK, debit:+card});
+  // Refunds reduce receipts
+  // Sales services
+  if(servicesGross>0){
+    if(vatMode==='include'){
+      const {net, vat} = splitVAT(servicesGross, vatRate);
+      je.lines.push({account:ACC.SALES_SVCS, credit:+net});
+      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
+    }else{ // add
+      je.lines.push({account:ACC.SALES_SVCS, credit:+servicesGross});
+      const vat = servicesGross * vatRate/100;
+      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
+    }
+  }
+  // Sales retail (treated like services for VAT at default rate)
+  if(retailGross>0){
+    if(vatMode==='include'){
+      const {net, vat} = splitVAT(retailGross, vatRate);
+      je.lines.push({account:ACC.SALES_RETAIL, credit:+net});
+      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
+    }else{
+      je.lines.push({account:ACC.SALES_RETAIL, credit:+retailGross});
+      const vat = retailGross * vatRate/100;
+      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
+    }
+  }
+  // Vouchers sold increase liability
+  if(vouchers>0) je.lines.push({account:ACC.VOUCHERS, credit:+vouchers});
+
+  // Balance the entry (Cash+Bank should equal totalGross+vouchers). We won't enforce strict equality in MVP.
+
+  // Post COGS for services now (exact COGS)
+  if(servicesCOGS>0){
+    je.lines.push({account:ACC.COGS, debit:+servicesCOGS});
+    je.lines.push({account:ACC.INVENTORY, credit:+servicesCOGS});
+  }
+
+  const id = await put('journal', je);
+  await put('takings', { date, services, retailGross, cash, card, vouchers, refunds, vatMode, vatRate, journalId:id });
+  return id;
+}
+
+async function closeMonthCOGS(period){ // YYYY-MM
+  // Aggregate services from all takings in the month and post single COGS adjustment (if needed)
+  const takings = await getAll('takings');
+  const inMonth = takings.filter(t => (t.date||'').startsWith(period));
+  let cogs = 0;
+  for(const t of inMonth){
+    for(const l of (t.services||[])) cogs += l.qty * l.trueCost;
+  }
+  if(cogs<=0) return null;
+  const je = { date: period+'-28', memo:'Month-end COGS', lines:[
+    {account:ACC.COGS, debit:+cogs},
+    {account:ACC.INVENTORY, credit:+cogs}
+  ]};
+  const id = await put('journal', je);
+  return id;
+}
+
+async function trialBalance(from, to){
+  const js = await getAll('journal');
+  const within = js.filter(j => (!from || j.date>=from) && (!to || j.date<=to));
+  const bal = {};
+  function post(a, d=0, c=0){
+    bal[a] = bal[a] || {debit:0, credit:0};
+    bal[a].debit += d; bal[a].credit += c;
+  }
+  for(const j of within){
+    for(const l of j.lines){
+      post(l.account, l.debit||0, l.credit||0);
+    }
+  }
+  return bal;
+}
+
+function sum(arr){ return arr.reduce((s,x)=>s+x,0); }
+
+async function statements(from, to){
+  const tb = await trialBalance(from,to);
+  const get = (name)=> tb[name]||{debit:0,credit:0};
+  const sales = (get(ACC.SALES_SVCS).credit + get(ACC.SALES_RETAIL).credit) - get(ACC.SALES_SVCS).debit - get(ACC.SALES_RETAIL).debit;
+  const cogs = get(ACC.COGS).debit - get(ACC.COGS).credit;
+  const grossProfit = sales - cogs;
+  const vatDue = get(ACC.VAT_PAYABLE).credit - get(ACC.VAT_PAYABLE).debit;
+  const assets = get(ACC.CASH).debit - get(ACC.CASH).credit
+               + get(ACC.BANK).debit - get(ACC.BANK).credit
+               + get(ACC.INVENTORY).debit - get(ACC.INVENTORY).credit;
+  const liabilities = get(ACC.VOUCHERS).credit - get(ACC.VOUCHERS).debit
+                    + get(ACC.VAT_PAYABLE).credit - get(ACC.VAT_PAYABLE).debit;
+  const equity = sales - cogs - (liabilities - vatDue); // simplified
+  return { sales, cogs, grossProfit, vatDue, assets, liabilities, equity, tb };
+}

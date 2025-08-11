@@ -1,0 +1,355 @@
+{
+  "services": [
+    {
+      "name": "Bleach Tint",
+      "retailPrice": 65.0,
+      "timeMins": 45,
+      "productSupplies": 4.82,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 25.34
+    },
+    {
+      "name": "Cleanse",
+      "retailPrice": 30.0,
+      "timeMins": 30,
+      "productSupplies": 7.02,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 20.7
+    },
+    {
+      "name": "Hi-Lift",
+      "retailPrice": 55.0,
+      "timeMins": 45,
+      "productSupplies": 9.22,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 29.74
+    },
+    {
+      "name": "Masking",
+      "retailPrice": 35.0,
+      "timeMins": 15,
+      "productSupplies": 4.33,
+      "utilitiesPerHour": 3.19,
+      "laborCost": 3.65,
+      "totalCost": 11.17
+    },
+    {
+      "name": "Root Melt",
+      "retailPrice": 55.0,
+      "timeMins": 30,
+      "productSupplies": 7.52,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 21.21
+    },
+    {
+      "name": "Root Tint",
+      "retailPrice": 50.0,
+      "timeMins": 30,
+      "productSupplies": 7.52,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 21.21
+    },
+    {
+      "name": "Semi Long",
+      "retailPrice": 50.0,
+      "timeMins": 30,
+      "productSupplies": 7.01,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 20.7
+    },
+    {
+      "name": "Semi Short",
+      "retailPrice": 46.0,
+      "timeMins": 20,
+      "productSupplies": 6.47,
+      "utilitiesPerHour": 4.25,
+      "laborCost": 4.87,
+      "totalCost": 15.59
+    },
+    {
+      "name": "Colour Bomb",
+      "retailPrice": 10.0,
+      "timeMins": 10,
+      "productSupplies": 4.94,
+      "utilitiesPerHour": 2.13,
+      "laborCost": 2.43,
+      "totalCost": 9.5
+    },
+    {
+      "name": "K18 to Colour",
+      "retailPrice": 25.0,
+      "timeMins": 5,
+      "productSupplies": 2.36,
+      "utilitiesPerHour": 1.06,
+      "laborCost": 1.22,
+      "totalCost": 4.64
+    },
+    {
+      "name": "L'oreal Detox",
+      "retailPrice": 20.0,
+      "timeMins": 5,
+      "productSupplies": 2.36,
+      "utilitiesPerHour": 1.06,
+      "laborCost": 1.22,
+      "totalCost": 4.64
+    },
+    {
+      "name": "Malabu C",
+      "retailPrice": 30.0,
+      "timeMins": 90,
+      "productSupplies": 6.47,
+      "utilitiesPerHour": 19.14,
+      "laborCost": 21.91,
+      "totalCost": 47.52
+    },
+    {
+      "name": "Revlon Gloss Treat",
+      "retailPrice": 20.0,
+      "timeMins": 10,
+      "productSupplies": 4.82,
+      "utilitiesPerHour": 2.13,
+      "laborCost": 2.43,
+      "totalCost": 9.38
+    },
+    {
+      "name": "Revlon Scalp Treatment",
+      "retailPrice": 40.0,
+      "timeMins": 5,
+      "productSupplies": 5.42,
+      "utilitiesPerHour": 1.06,
+      "laborCost": 1.22,
+      "totalCost": 7.7
+    },
+    {
+      "name": "Revlon Scalp Mask",
+      "retailPrice": 15.0,
+      "timeMins": 5,
+      "productSupplies": 2.36,
+      "utilitiesPerHour": 1.06,
+      "laborCost": 1.22,
+      "totalCost": 4.64
+    },
+    {
+      "name": "Treatment",
+      "retailPrice": 10.0,
+      "timeMins": 10,
+      "productSupplies": 2.36,
+      "utilitiesPerHour": 2.13,
+      "laborCost": 2.43,
+      "totalCost": 6.92
+    },
+    {
+      "name": "Curly Blowdry",
+      "retailPrice": 32.0,
+      "timeMins": 35,
+      "productSupplies": 9.58,
+      "utilitiesPerHour": 7.44,
+      "laborCost": 8.52,
+      "totalCost": 25.54
+    },
+    {
+      "name": "Gent Cut",
+      "retailPrice": 17.0,
+      "timeMins": 30,
+      "productSupplies": 3.8,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 17.49
+    },
+    {
+      "name": "Gents Wash and Cut",
+      "retailPrice": 17.0,
+      "timeMins": 30,
+      "productSupplies": 3.8,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 17.49
+    },
+    {
+      "name": "cut blowdry long",
+      "retailPrice": 57.0,
+      "timeMins": 45,
+      "productSupplies": 9.58,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 30.11
+    },
+    {
+      "name": "cut medium",
+      "retailPrice": 52.0,
+      "timeMins": 45,
+      "productSupplies": 5.25,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 25.77
+    },
+    {
+      "name": "cut short",
+      "retailPrice": 47.0,
+      "timeMins": 45,
+      "productSupplies": 3.8,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 24.33
+    },
+    {
+      "name": "oap",
+      "retailPrice": 37.0,
+      "timeMins": 30,
+      "productSupplies": 3.8,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 17.49
+    },
+    {
+      "name": "short blowdry",
+      "retailPrice": 24.0,
+      "timeMins": 30,
+      "productSupplies": 6.69,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 20.38
+    },
+    {
+      "name": "long blowdry",
+      "retailPrice": 29.0,
+      "timeMins": 30,
+      "productSupplies": 10.3,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 23.99
+    },
+    {
+      "name": "medium blowdry",
+      "retailPrice": 27.0,
+      "timeMins": 30,
+      "productSupplies": 9.85,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 23.53
+    },
+    {
+      "name": "1/2 head medium",
+      "retailPrice": 65.0,
+      "timeMins": 45,
+      "productSupplies": 11.12,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 31.65
+    },
+    {
+      "name": "1/2 head long",
+      "retailPrice": 75.0,
+      "timeMins": 45,
+      "productSupplies": 12.5,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 33.03
+    },
+    {
+      "name": "baby lights",
+      "retailPrice": 70.0,
+      "timeMins": 60,
+      "productSupplies": 15.51,
+      "utilitiesPerHour": 12.76,
+      "laborCost": 14.6,
+      "totalCost": 42.87
+    },
+    {
+      "name": "balyage",
+      "retailPrice": 85.0,
+      "timeMins": 75,
+      "productSupplies": 3.24,
+      "utilitiesPerHour": 15.95,
+      "laborCost": 18.26,
+      "totalCost": 37.45
+    },
+    {
+      "name": "half head short",
+      "retailPrice": 60.0,
+      "timeMins": 45,
+      "productSupplies": 14.56,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 35.08
+    },
+    {
+      "name": "full head short",
+      "retailPrice": 70.0,
+      "timeMins": 60,
+      "productSupplies": 19.39,
+      "utilitiesPerHour": 12.76,
+      "laborCost": 14.6,
+      "totalCost": 46.76
+    },
+    {
+      "name": "full headlong",
+      "retailPrice": 88.0,
+      "timeMins": 75,
+      "productSupplies": 23.37,
+      "utilitiesPerHour": 15.95,
+      "laborCost": 18.26,
+      "totalCost": 57.58
+    },
+    {
+      "name": "upstyle",
+      "retailPrice": 45.0,
+      "timeMins": 45,
+      "productSupplies": 11.03,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 31.55
+    },
+    {
+      "name": "colour change",
+      "retailPrice": 88.0,
+      "timeMins": 90,
+      "productSupplies": 13.43,
+      "utilitiesPerHour": 19.14,
+      "laborCost": 21.91,
+      "totalCost": 54.48
+    },
+    {
+      "name": "face framing",
+      "retailPrice": 55.0,
+      "timeMins": 45,
+      "productSupplies": 5.67,
+      "utilitiesPerHour": 9.57,
+      "laborCost": 10.95,
+      "totalCost": 26.19
+    },
+    {
+      "name": "floods",
+      "retailPrice": 15.0,
+      "timeMins": 30,
+      "productSupplies": 6.11,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 19.79
+    },
+    {
+      "name": "tbar long",
+      "retailPrice": 50.0,
+      "timeMins": 30,
+      "productSupplies": 6.8,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 20.49
+    },
+    {
+      "name": "tbar short",
+      "retailPrice": 40.0,
+      "timeMins": 30,
+      "productSupplies": 6.8,
+      "utilitiesPerHour": 6.38,
+      "laborCost": 7.3,
+      "totalCost": 20.48
+    }
+  ]
+}
