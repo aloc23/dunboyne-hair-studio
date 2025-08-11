@@ -1,52 +1,45 @@
 
-function sum(arr){ return arr.reduce((a,b)=>a+Number(b||0),0); }
-function computeBalances(journals){
-  const balances = {};
-  for(const j of journals){
-    for(const l of j.lines){
-      if(!balances[l.account]) balances[l.account]=0;
-      balances[l.account] += Number(l.debit||0);
-      balances[l.account] -= Number(l.credit||0);
-    }
-  }
-  return balances;
-}
-function plFrom(balances){
-  const sales = Object.entries(balances).filter(([acc])=>acc.startsWith('4000') || acc.startsWith('4010') || acc.includes('Sales'));
-  const refunds = Object.entries(balances).filter(([acc])=>acc.includes('Refunds'));
-  const expenses = Object.entries(balances).filter(([acc])=>acc.startsWith('5000') || acc.includes('Expense'));
-  const salesTotal = sum(sales.map(([,v])=>-v));
-  const refundsTotal = sum(refunds.map(([,v])=>v));
-  const expenseTotal = sum(expenses.map(([,v])=>v));
-  const grossProfit = salesTotal - refundsTotal - expenseTotal;
-  return { sales, refunds, expenses, salesTotal, refundsTotal, expenseTotal, grossProfit };
-}
-function bsFrom(balances){
-  const assets = [], liabs = [], equity = [];
-  for(const [acc,bal] of Object.entries(balances)){
-    if(acc.startsWith('1')) assets.push([acc,bal]);
-    else if(acc.startsWith('2')) liabs.push([acc,bal]);
-    else if(acc.startsWith('3')) equity.push([acc,bal]);
-  }
-  const assetsTotal = sum(assets.map(([,v])=>v));
-  const liabsTotal = sum(liabs.map(([,v])=>v));
-  const equityTotal = sum(equity.map(([,v])=>v));
-  return {assets, liabs, equity, assetsTotal, liabsTotal, equityTotal};
-}
-function vatSummary(journals){
-  let out=0, inp=0;
-  for(const j of journals){
-    for(const l of j.lines){
-      if(l.account.includes('VAT Payable')) out += Number(l.credit||0) - Number(l.debit||0);
-      if(l.account.includes('VAT Input')) inp += Number(l.debit||0) - Number(l.credit||0);
-    }
-  }
-  const due = out - inp;
-  return { output: out, input: inp, due };
-}
-function renderTable(el, rows){
-  const html = [`<tr>${rows.headers.map(h=>`<th>${h}</th>`).join('')}</tr>`]
-    .concat(rows.rows.map(r=>`<tr>${r.map(c=>`<td>${typeof c==='number'?c.toFixed(2):c}</td>`).join('')}</tr>`));
-  el.innerHTML = `<table>${html.join('')}</table>`;
-}
-window.Reports = { computeBalances, plFrom, bsFrom, vatSummary, renderTable };
+function fmt(n){ return '€ '+(Number(n)||0).toFixed(2); }
+document.getElementById('run-reports').addEventListener('click', ()=>{
+  const f = document.getElementById('rep-from').value;
+  const t = document.getElementById('rep-to').value;
+  const pl = Ledger.pl(f, t);
+  document.getElementById('pl').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><h3>Sales</h3><div class="v">${fmt(pl.sales)}</div></div>
+      <div class="kpi"><h3>COGS</h3><div class="v">${fmt(pl.cogs)}</div></div>
+      <div class="kpi"><h3>Expenses</h3><div class="v">${fmt(pl.expenses)}</div></div>
+      <div class="kpi"><h3>Operating Profit</h3><div class="v">${fmt(pl.operating)}</div></div>
+    </div>`;
+  const bs = Ledger.balanceSheet(t||new Date().toISOString().slice(0,10));
+  const a = Object.entries(bs.assets).map(([k,v])=>`<div class="kpi"><h3>${k}</h3><div class="v">${fmt(v)}</div></div>`).join('');
+  const l = Object.entries(bs.liabilities).map(([k,v])=>`<div class="kpi"><h3>${k}</h3><div class="v">${fmt(v)}</div></div>`).join('');
+  const e = Object.entries(bs.equity).map(([k,v])=>`<div class="kpi"><h3>${k}</h3><div class="v">${fmt(v)}</div></div>`).join('');
+  document.getElementById('bs').innerHTML = `<h3>Assets</h3><div class="kpis">${a}</div><h3>Liabilities</h3><div class="kpis">${l}</div><h3>Equity</h3><div class="kpis">${e}</div>`;
+  const vr = Ledger.vatReport(f,t);
+  document.getElementById('vat').innerHTML = `
+    <h3>VAT Summary</h3>
+    <div class="kpis">
+      <div class="kpi"><h3>Output VAT</h3><div class="v">${fmt(vr.outputVAT)}</div></div>
+      <div class="kpi"><h3>Input VAT</h3><div class="v">${fmt(vr.inputVAT)}</div></div>
+      <div class="kpi"><h3>VAT Due</h3><div class="v">${fmt(vr.net)}</div></div>
+    </div>`;
+});
+
+document.getElementById('run-monthly').addEventListener('click', ()=>{
+  const m = document.getElementById('rep-month').value; // YYYY-MM
+  if(!m){ alert('Choose a month'); return; }
+  const from = m+'-01';
+  const to = new Date(new Date(from).getFullYear(), new Date(from).getMonth()+1, 0).toISOString().slice(0,10);
+  const pl = Ledger.pl(from, to);
+  const vat = Ledger.vatReport(from, to);
+  const html = `
+    <div class="kpis">
+      <div class="kpi"><h3>Revenue</h3><div class="v">${fmt(pl.sales)}</div></div>
+      <div class="kpi"><h3>COGS</h3><div class="v">${fmt(pl.cogs)}</div></div>
+      <div class="kpi"><h3>Expenses</h3><div class="v">${fmt(pl.expenses)}</div></div>
+      <div class="kpi"><h3>Operating Profit</h3><div class="v">${fmt(pl.operating)}</div></div>
+      <div class="kpi"><h3>VAT Due</h3><div class="v">${fmt(vat.net)}</div></div>
+    </div>`;
+  document.getElementById('monthly-summary').innerHTML = html;
+});

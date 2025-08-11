@@ -1,193 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Salon Accounting</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
-  <meta name="theme-color" content="#0f172a">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="manifest" href="manifest.webmanifest">
+<title>Salon Accounting</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="app-header">
-    <h1>Salon Accounting</h1>
-    <nav class="tabs" id="tabs">
-      <button data-tab="tab-accounting" class="active">Accounting</button>
-      <button data-tab="tab-cost">Cost Analyzer</button>
-      <button data-tab="tab-import">Materials Import</button>
-      <button data-tab="tab-reports">Reports</button>
-      <button data-tab="tab-settings">Settings</button>
-      <button data-tab="tab-data">Data</button>
-    </nav>
-  </header>
+<header>
+  <h1>Salon Accounting</h1>
+  <nav>
+    <button class="tab-btn" data-tab="accounting">Accounting</button>
+    <button class="tab-btn" data-tab="cost">Cost Analyzer</button>
+    <button class="tab-btn" data-tab="import">Materials Import</button>
+    <button class="tab-btn" data-tab="reports">Reports</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+    <button class="tab-btn" data-tab="data">Data</button>
+  </nav>
+</header>
 
-  <main>
-    <section id="tab-accounting" class="tab active">
-      <h2>Daily/Weekly Intake</h2>
-      <p class="help">Keep this simple. Enter totals for the day (or a week). Stylist/service breakdown is optional.</p>
-      <form id="takings-form" class="card">
-        <div class="grid-2">
-          <label>Date <input type="date" id="tak-date" required></label>
-          <label>Period (optional note) <input type="text" id="tak-note" placeholder="e.g. Week 32"></label>
-        </div>
-        <div class="grid-3">
-          <label>Services Gross (€) <input type="number" step="0.01" id="tak-services" value="0"></label>
-          <label>Retail Gross (€) <input type="number" step="0.01" id="tak-retail" value="0"></label>
-          <label>Refunds Gross (€) <input type="number" step="0.01" id="tak-refunds" value="0"></label>
-        </div>
-        <div class="grid-3">
-          <label>Cash In (€) <input type="number" step="0.01" id="tak-cash" value="0"></label>
-          <label>Card In (€) <input type="number" step="0.01" id="tak-card" value="0"></label>
-          <label>Vouchers Sold (€) <input type="number" step="0.01" id="tak-vouchers-in" value="0"></label>
-        </div>
-        <div class="grid-2">
-          <label>Vouchers Redeemed (€) <input type="number" step="0.01" id="tak-vouchers-out" value="0"></label>
-          <label>VAT Mode
-            <select id="tak-vatmode">
-              <option value="include">Prices include VAT</option>
-              <option value="add">Add VAT on top</option>
-            </select>
-          </label>
-        </div>
-        <details>
-          <summary>Optional breakdown by stylist/service</summary>
-          <textarea id="tak-detail" placeholder="CSV-like: date,stylist,service,qty,gross"></textarea>
-        </details>
-        <div class="actions">
-          <button type="submit" class="primary">Post Takings</button>
-        </div>
-      </form>
-
-      <h3>Expense</h3>
-      <form id="expense-form" class="card">
-        <div class="grid-3">
-          <label>Date <input type="date" id="exp-date" required></label>
-          <label>Supplier <input type="text" id="exp-supplier" placeholder="Supplier name"></label>
-          <label>Category
-            <select id="exp-category">
-              <option>Consumables</option>
-              <option>Rent</option>
-              <option>Utilities</option>
-              <option>Wages</option>
-              <option>Other</option>
-            </select>
-          </label>
-        </div>
-        <div class="grid-3">
-          <label>Net (€) <input type="number" step="0.01" id="exp-net" value="0"></label>
-          <label>VAT % <input type="number" step="0.01" id="exp-vatrate" value="23"></label>
-          <label>Total (€) <input type="number" step="0.01" id="exp-total" value="0"></label>
-        </div>
-        <div class="actions">
-          <button type="submit" class="primary">Post Expense</button>
-        </div>
-      </form>
-
-      <div class="card">
-        <h3>Recent Entries</h3>
-        <table id="recent-table"></table>
-      </div>
-    </section>
-
-    <section id="tab-cost" class="tab">
-      <h2>Cost Analyzer</h2>
-      <form id="cost-form" class="card">
-        <div class="grid-2">
-          <label>Service Name <input type="text" id="cost-service" required></label>
-          <label>Target Margin % <input type="number" id="cost-target" value="70"></label>
-        </div>
-        <h4>Materials</h4>
-        <div id="materials-list"></div>
-        <button id="add-material" type="button">+ Add Material</button>
-        <div class="grid-3">
-          <label>Labour (mins) <input type="number" id="labour-mins" value="45"></label>
-          <label>Labour €/hr <input type="number" step="0.01" id="labour-rate" value="20"></label>
-          <label>Overhead €/service <input type="number" step="0.01" id="overhead" value="2"></label>
-        </div>
-        <div class="grid-2">
-          <label>Price (gross €) <input type="number" step="0.01" id="price-gross" value="60"></label>
-          <label>VAT % <input type="number" step="0.01" id="price-vat" value="23"></label>
-        </div>
-        <div class="actions">
-          <button type="submit" class="primary">Save Analysis</button>
-        </div>
-        <div id="cost-output" class="output"></div>
-      </form>
-
-      <div class="card">
-        <h3>Saved Analyses</h3>
-        <table id="cost-table"></table>
-      </div>
-    </section>
-
-    <section id="tab-import" class="tab">
-      <h2>Materials Import</h2>
-      <div class="card">
-        <p>Upload a CSV with columns: service_name,material_name,sku,supplier,units_per_service,unit,pack_size,pack_unit,pack_cost_eur,waste_factor_pct</p>
-        <input type="file" id="import-file" accept=".csv">
-        <div class="actions">
-          <button id="btn-parse" class="primary" type="button">Parse</button>
-          <button id="btn-apply" type="button">Apply to Catalog</button>
-        </div>
-        <div id="import-preview"></div>
-      </div>
-    </section>
-
-    <section id="tab-reports" class="tab">
-      <h2>Reports</h2>
-      <div class="card">
-        <div class="grid-3">
-          <label>From <input type="date" id="rep-from"></label>
-          <label>To <input type="date" id="rep-to"></label>
-          <button id="btn-run" class="primary" type="button">Run</button>
+<main>
+  <section id="accounting" class="tab active">
+    <div class="card">
+      <h2>Takings</h2>
+      <div class="row">
+        <label>Mode
+          <select id="takings-mode">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly total</option>
+          </select>
+        </label>
+        <label id="date-label">Date
+          <input type="date" id="takings-date"/>
+        </label>
+        <div id="week-range" class="row hidden">
+          <label>Week Start <input type="date" id="week-start"/></label>
+          <label>Week End <input type="date" id="week-end"/></label>
         </div>
       </div>
       <div class="grid-2">
-        <div class="card"><h3>Profit & Loss</h3><div id="pl-table"></div></div>
-        <div class="card"><h3>Balance Sheet</h3><div id="bs-table"></div></div>
+        <label>Services Gross (€) <input type="number" id="services-gross" step="0.01" min="0"></label>
+        <label>Retail Gross (€) <input type="number" id="retail-gross" step="0.01" min="0"></label>
+        <label>Cash In (€) <input type="number" id="cash-in" step="0.01" min="0"></label>
+        <label>Card In (€) <input type="number" id="card-in" step="0.01" min="0"></label>
+        <label>Vouchers Sold (€) <input type="number" id="vouchers-in" step="0.01" min="0"></label>
+        <label>Vouchers Redeemed (€) <input type="number" id="vouchers-out" step="0.01" min="0"></label>
+        <label>Refunds (€) <input type="number" id="refunds" step="0.01" min="0"></label>
       </div>
-      <div class="card"><h3>VAT Summary</h3><div id="vat-table"></div></div>
-    </section>
+      <div class="row">
+        <button id="post-takings">Post Takings</button>
+        <span id="takings-status" class="status"></span>
+      </div>
+      <p class="hint">Services = hair services performed. Retail = product sales. Engine will split VAT as per VAT mode in Settings.</p>
+    </div>
 
-    <section id="tab-settings" class="tab">
+    <div class="card">
+      <h2>Expense</h2>
+      <div class="grid-3">
+        <label>Date <input type="date" id="exp-date"></label>
+        <label>Supplier <input type="text" id="exp-supplier" placeholder="Supplier"></label>
+        <label>Category
+          <select id="exp-category">
+            <option>Rent</option><option>Utilities</option><option>Supplies</option>
+            <option>Wages</option><option>Loan Interest</option><option>Misc</option>
+          </select>
+        </label>
+        <label>Net (€) <input type="number" id="exp-net" step="0.01" min="0"></label>
+        <label>VAT Rate
+          <select id="exp-vat">
+            <option value="0">0%</option>
+            <option value="0.135">13.5%</option>
+            <option value="0.23" selected>23%</option>
+          </select>
+        </label>
+        <label>Total (€) <input type="number" id="exp-total" step="0.01" min="0" placeholder="auto if Net+VAT"></label>
+      </div>
+      <div class="row">
+        <button id="post-expense">Post Expense</button>
+        <span id="expense-status" class="status"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="cost" class="tab">
+    <div class="card">
+      <h2>Cost Analyzer</h2>
+      <div class="grid-3">
+        <label>Service
+          <select id="ca-service"></select>
+        </label>
+        <label>Minutes <input type="number" id="ca-minutes" min="0" step="1" value="60"></label>
+        <label>Target Margin % <input type="number" id="ca-target" min="0" max="95" step="1" value="60"></label>
+      </div>
+      <div id="materials-list"></div>
+      <div class="grid-3">
+        <label>Overhead €/min <input type="number" id="ca-overhead" step="0.01" value="0.10"></label>
+        <label>Labour €/min <input type="number" id="ca-labour" step="0.01" value="0.40"></label>
+        <label>VAT Rate
+          <select id="ca-vat">
+            <option value="0.23">23%</option>
+            <option value="0.135">13.5%</option>
+            <option value="0">0%</option>
+          </select>
+        </label>
+      </div>
+      <div id="ca-output" class="kpis"></div>
+    </div>
+  </section>
+
+  <section id="import" class="tab">
+    <div class="card">
+      <h2>Materials Import (CSV)</h2>
+      <input type="file" id="csv-file" accept=".csv">
+      <button id="parse-csv">Parse</button>
+      <div id="csv-preview"></div>
+      <button id="apply-import" disabled>Apply to Catalog</button>
+      <p class="hint">Expected columns: service_name, material_name, units_per_service, unit, pack_size, pack_unit, pack_cost_eur, waste_factor_pct</p>
+    </div>
+  </section>
+
+  <section id="reports" class="tab">
+    <div class="card">
+      <h2>Monthly Accounts</h2>
+      <div class="row">
+        <label>Month <input type="month" id="rep-month"></label>
+        <button id="run-monthly">Run</button>
+      </div>
+      <div id="monthly-summary" class="kpis"></div>
+    </div>
+    <div class="card">
+      <h2>Financial Statements</h2>
+      <div class="row">
+        <label>From <input type="date" id="rep-from"></label>
+        <label>To <input type="date" id="rep-to"></label>
+        <button id="run-reports">Run</button>
+      </div>
+      <div id="pl"></div>
+      <div id="bs"></div>
+      <div id="vat"></div>
+    </div>
+  </section>
+
+  <section id="settings" class="tab">
+    <div class="card">
       <h2>Settings</h2>
-      <div class="card grid-3">
-        <label>Default VAT % <input type="number" step="0.01" id="set-vat" value="23"></label>
+      <div class="grid-3">
         <label>VAT Mode
-          <select id="set-vatmode">
-            <option value="include">Prices include VAT</option>
+          <select id="vat-mode">
+            <option value="include" selected>Prices include VAT</option>
             <option value="add">Add VAT on top</option>
           </select>
         </label>
-        <button id="btn-save-settings" class="primary">Save</button>
+        <label>Default VAT %
+          <input type="number" id="vat-rate" value="23" step="0.5">
+        </label>
+        <label>Currency <input type="text" id="currency" value="EUR"></label>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="tab-data" class="tab">
+  <section id="data" class="tab">
+    <div class="card">
       <h2>Data</h2>
-      <div class="card">
-        <button id="btn-export" class="primary">Export JSON</button>
-        <input type="file" id="restore-file" accept="application/json">
-        <button id="btn-restore">Restore</button>
+      <div class="row">
+        <button id="export-json">Export Backup</button>
+        <input type="file" id="import-json" accept=".json">
+        <button id="import-btn">Restore</button>
       </div>
-      <pre id="export-status"></pre>
-    </section>
-  </main>
+      <pre id="data-log"></pre>
+    </div>
+  </section>
+</main>
 
-  <footer class="footer">
-    <small>Salon Accounting MVP — Local PWA • VAT toggle • Double-entry • Cost Analyzer</small>
-  </footer>
-
-  <script src="db.js"></script>
-  <script src="ledger.js"></script>
-  <script src="reports.js"></script>
-  <script src="cost.js"></script>
-  <script src="importer.js"></script>
-  <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
+<script src="app.js"></script>
+<script src="ledger.js"></script>
+<script src="cost_analyzer.js"></script>
+<script src="importer.js"></script>
+<script src="reports.js"></script>
+<script src="sw-register.js"></script>
 </body>
 </html>
