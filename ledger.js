@@ -1,120 +1,58 @@
-// Ledger & reports
-const ACC = {
-  CASH: 'Cash',
-  BANK: 'Bank',
-  SALES_SVCS: 'Sales Services',
-  SALES_RETAIL: 'Sales Retail',
-  VAT_PAYABLE: 'VAT Payable',
-  VOUCHERS: 'Unearned Revenue',
-  COGS: 'Cost of Goods Sold',
-  INVENTORY: 'Inventory (Virtual)',
-  EXPENSE: 'Expenses'
-};
 
-function splitVAT(amountIncl, rate){
-  const net = amountIncl / (1 + rate/100);
-  const vat = amountIncl - net;
-  return {net, vat};
+// Helpers for VAT & revenue
+function computeLineTotals({unitPrice, qty, discount, voucher}){
+  const gross = (unitPrice * qty) - (discount||0) - (voucher||0);
+  return { gross: +gross.toFixed(2) };
 }
 
-async function postTakings({date, vatMode, vatRate, services, retailGross, cash, card, vouchers, refunds}){
-  // Compute totals from services
-  const servicesGross = services.reduce((s,l)=> s + l.qty * l.priceIncl, 0);
-  const servicesCOGS = services.reduce((s,l)=> s + l.qty * l.trueCost, 0);
-  const totalGross = servicesGross + retailGross - refunds;
-
-  const je = { date, memo:'Takings', lines: [] };
-  // Receipts
-  if(cash>0) je.lines.push({account:ACC.CASH, debit:+cash});
-  if(card>0) je.lines.push({account:ACC.BANK, debit:+card});
-  // Refunds reduce receipts
-  // Sales services
-  if(servicesGross>0){
-    if(vatMode==='include'){
-      const {net, vat} = splitVAT(servicesGross, vatRate);
-      je.lines.push({account:ACC.SALES_SVCS, credit:+net});
-      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
-    }else{ // add
-      je.lines.push({account:ACC.SALES_SVCS, credit:+servicesGross});
-      const vat = servicesGross * vatRate/100;
-      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
-    }
+function computeSaleTotals(lines, retailGross, vatMode, vatRate){
+  const svcGross = lines.reduce((a,l)=> a + computeLineTotals(l).gross, 0);
+  const totalGross = svcGross + (retailGross||0);
+  let net, vat;
+  if(vatMode==='include'){
+    net = totalGross / (1 + vatRate/100);
+    vat = totalGross - net;
+  }else{
+    net = totalGross;
+    vat = totalGross * (vatRate/100);
   }
-  // Sales retail (treated like services for VAT at default rate)
-  if(retailGross>0){
-    if(vatMode==='include'){
-      const {net, vat} = splitVAT(retailGross, vatRate);
-      je.lines.push({account:ACC.SALES_RETAIL, credit:+net});
-      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
-    }else{
-      je.lines.push({account:ACC.SALES_RETAIL, credit:+retailGross});
-      const vat = retailGross * vatRate/100;
-      if(vat>0) je.lines.push({account:ACC.VAT_PAYABLE, credit:+vat});
-    }
-  }
-  // Vouchers sold increase liability
-  if(vouchers>0) je.lines.push({account:ACC.VOUCHERS, credit:+vouchers});
-
-  // Balance the entry (Cash+Bank should equal totalGross+vouchers). We won't enforce strict equality in MVP.
-
-  // Post COGS for services now (exact COGS)
-  if(servicesCOGS>0){
-    je.lines.push({account:ACC.COGS, debit:+servicesCOGS});
-    je.lines.push({account:ACC.INVENTORY, credit:+servicesCOGS});
-  }
-
-  const id = await put('journal', je);
-  await put('takings', { date, services, retailGross, cash, card, vouchers, refunds, vatMode, vatRate, journalId:id });
-  return id;
+  return { svcGross:+svcGross.toFixed(2), totalGross:+totalGross.toFixed(2), net:+net.toFixed(2), vat:+vat.toFixed(2) };
 }
 
-async function closeMonthCOGS(period){ // YYYY-MM
-  // Aggregate services from all takings in the month and post single COGS adjustment (if needed)
-  const takings = await getAll('takings');
-  const inMonth = takings.filter(t => (t.date||'').startsWith(period));
-  let cogs = 0;
-  for(const t of inMonth){
-    for(const l of (t.services||[])) cogs += l.qty * l.trueCost;
+// Compute exact COGS from service lines based on catalog
+function computeCOGS(lines, catalog){
+  const map = new Map(catalog.map(s=>[s.id,s]));
+  let cogs=0;
+  for(const l of lines){
+    const svc = map.get(l.serviceId);
+    if(!svc) continue;
+    cogs += (svc.totalCost||0) * (l.qty||0);
   }
-  if(cogs<=0) return null;
-  const je = { date: period+'-28', memo:'Month-end COGS', lines:[
-    {account:ACC.COGS, debit:+cogs},
-    {account:ACC.INVENTORY, credit:+cogs}
-  ]};
-  const id = await put('journal', je);
-  return id;
+  return +cogs.toFixed(2);
 }
 
-async function trialBalance(from, to){
-  const js = await getAll('journal');
-  const within = js.filter(j => (!from || j.date>=from) && (!to || j.date<=to));
-  const bal = {};
-  function post(a, d=0, c=0){
-    bal[a] = bal[a] || {debit:0, credit:0};
-    bal[a].debit += d; bal[a].credit += c;
-  }
-  for(const j of within){
-    for(const l of j.lines){
-      post(l.account, l.debit||0, l.credit||0);
-    }
-  }
-  return bal;
+// Summaries for reports
+function listTakings(fromISO, toISO){
+  const db = loadDB();
+  return db.takings.filter(t=> (!fromISO || t.date>=fromISO) && (!toISO || t.date<=toISO));
+}
+function listExpenses(fromISO, toISO){
+  const db = loadDB();
+  return db.expenses.filter(e=> (!fromISO || e.date>=fromISO) && (!toISO || e.date<=toISO));
 }
 
-function sum(arr){ return arr.reduce((s,x)=>s+x,0); }
+function closeMonthCOGS(ym){
+  // Summarize COGS for the calendar month and add a journal entry; lock month
+  const from = ym + "-01";
+  const to = new Date(ym+"-01T00:00:00Z");
+  to.setMonth(to.getMonth()+1);
+  to.setDate(0); // last day prev
+  const toISO = to.toISOString().slice(0,10);
 
-async function statements(from, to){
-  const tb = await trialBalance(from,to);
-  const get = (name)=> tb[name]||{debit:0,credit:0};
-  const sales = (get(ACC.SALES_SVCS).credit + get(ACC.SALES_RETAIL).credit) - get(ACC.SALES_SVCS).debit - get(ACC.SALES_RETAIL).debit;
-  const cogs = get(ACC.COGS).debit - get(ACC.COGS).credit;
-  const grossProfit = sales - cogs;
-  const vatDue = get(ACC.VAT_PAYABLE).credit - get(ACC.VAT_PAYABLE).debit;
-  const assets = get(ACC.CASH).debit - get(ACC.CASH).credit
-               + get(ACC.BANK).debit - get(ACC.BANK).credit
-               + get(ACC.INVENTORY).debit - get(ACC.INVENTORY).credit;
-  const liabilities = get(ACC.VOUCHERS).credit - get(ACC.VOUCHERS).debit
-                    + get(ACC.VAT_PAYABLE).credit - get(ACC.VAT_PAYABLE).debit;
-  const equity = sales - cogs - (liabilities - vatDue); // simplified
-  return { sales, cogs, grossProfit, vatDue, assets, liabilities, equity, tb };
+  const takings = listTakings(from, toISO);
+  const catalog = getCatalog();
+  const cogs = takings.reduce((sum,t)=> sum + computeCOGS(t.lines,catalog), 0);
+  addJournal({type:"COGS_SUMMARY", month: ym, amount:+cogs.toFixed(2)});
+  lockMonth(ym);
+  return cogs;
 }

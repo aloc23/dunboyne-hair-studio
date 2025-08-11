@@ -1,1 +1,9 @@
-{"name": "Salon Accounts", "short_name": "SalonAcct", "start_url": "index.html", "display": "standalone", "background_color": "#0f1113", "theme_color": "#0f1113", "icons": []}
+{
+  "name": "Salon Accounting",
+  "short_name": "SalonAcct",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "icons": []
+}

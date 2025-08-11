@@ -1,48 +1,48 @@
-import { runStatements } from './ledger.js';
 
-function fmt(n){ return '€'+(Math.round(n*100)/100).toFixed(2); }
+function renderReports(fromISO, toISO){
+  const settings = getSettings();
+  const vatMode = settings.vatMode;
+  const vatRate = settings.vatRate;
 
-async function runMonthly(){
-  const val = document.getElementById('monthPicker').value; if(!val) return;
-  const [y,m] = val.split('-');
-  const from = `${y}-${m}-01`;
-  const to = new Date(+y, +m, 0).toISOString().slice(0,10);
-  const r = await runStatements(from,to);
-  const html = `
-  <table>
-    <tbody>
-      <tr><td>Revenue</td><td>${fmt(r.income)}</td></tr>
-      <tr><td>COGS (supplies)</td><td>${fmt(r.cogs)}</td></tr>
-      <tr><td><strong>Gross Profit</strong></td><td><strong>${fmt(r.grossProfit)}</strong></td></tr>
-      <tr><td>Operating Expenses</td><td>${fmt(r.expenses)}</td></tr>
-      <tr><td><strong>Operating Profit</strong></td><td><strong>${fmt(r.opProfit)}</strong></td></tr>
-      <tr><td>VAT Due</td><td>${fmt(r.vatDue)}</td></tr>
-    </tbody>
-  </table>`;
-  document.getElementById('monthlyOut').innerHTML = html;
-}
+  const catalog = getCatalog();
+  const takings = listTakings(fromISO, toISO);
+  let svcGross = 0, totalGross = 0, net=0, vat=0, retailGross=0, cogs=0;
+  for(const t of takings){
+    const sum = computeSaleTotals(t.lines, t.retailGross||0, t.vatMode, t.vatRate);
+    svcGross += sum.svcGross;
+    retailGross += (t.retailGross||0);
+    totalGross += sum.totalGross;
+    // We need net/vat summation: recompute per-entry for accuracy
+    net += (t.vatMode==='include') ? sum.net : sum.net; // both already net
+    vat += sum.vat;
+    cogs += computeCOGS(t.lines, catalog);
+  }
+  const expenses = listExpenses(fromISO, toISO);
+  const expNet = expenses.reduce((a,e)=>a+e.net,0);
+  const expVAT = expenses.reduce((a,e)=>a+e.vat,0);
+  const expTotal = expNet + expVAT;
 
-async function runFS(){
-  const from = document.getElementById('fromDate').value;
-  const to = document.getElementById('toDate').value;
-  const r = await runStatements(from,to);
-  const html = `
-  <h3>P&L</h3>
-  <table><tbody>
-  <tr><td>Revenue</td><td>${fmt(r.income)}</td></tr>
-  <tr><td>COGS</td><td>${fmt(r.cogs)}</td></tr>
-  <tr><td>Expenses</td><td>${fmt(r.expenses)}</td></tr>
-  <tr><td><strong>Net Profit</strong></td><td><strong>${fmt(r.opProfit)}</strong></td></tr>
-  </tbody></table>
-  <h3>Balance Sheet</h3>
-  <table><tbody>
-  <tr><td>Assets</td><td>${fmt(r.assets)}</td></tr>
-  <tr><td>Liabilities</td><td>${fmt(r.liabilities)}</td></tr>
-  <tr><td>Equity</td><td>${fmt(r.equity)}</td></tr>
-  </tbody></table>
+  const grossProfit = totalGross - cogs;
+  const operatingProfit = grossProfit - expNet; // exclude input VAT from P&L
+
+  const el = document.getElementById('report-output');
+  el.innerHTML = `
+    <div class="kpis">
+      <div class="chip">Services Gross € ${svcGross.toFixed(2)}</div>
+      <div class="chip">Retail Gross € ${retailGross.toFixed(2)}</div>
+      <div class="chip">Revenue Gross € ${totalGross.toFixed(2)}</div>
+      <div class="chip">VAT Output € ${vat.toFixed(2)}</div>
+      <div class="chip">COGS € ${cogs.toFixed(2)}</div>
+      <div class="chip">Gross Profit € ${grossProfit.toFixed(2)}</div>
+      <div class="chip">Expenses (Net) € ${expNet.toFixed(2)}</div>
+      <div class="chip">Operating Profit € ${operatingProfit.toFixed(2)}</div>
+    </div>
+    <h3 class="mt">Expenses</h3>
+    <table class="table">
+      <thead><tr><th>Date</th><th>Category</th><th>Supplier</th><th>Net</th><th>VAT</th><th>Total</th></tr></thead>
+      <tbody>
+        ${expenses.map(e=>`<tr><td>${e.date}</td><td>${e.category}</td><td>${e.supplier||''}</td><td>${e.net.toFixed(2)}</td><td>${e.vat.toFixed(2)}</td><td>${e.total.toFixed(2)}</td></tr>`).join('')}
+      </tbody>
+    </table>
   `;
-  document.getElementById('fsOut').innerHTML = html;
 }
-
-document.getElementById('runMonthly').addEventListener('click', runMonthly);
-document.getElementById('runFS').addEventListener('click', runFS);
