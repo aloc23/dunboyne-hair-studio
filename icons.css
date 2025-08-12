@@ -114,6 +114,11 @@
   color: var(--accent-primary);
 }
 
+.icon-email::before {
+  content: "📧";
+  color: var(--info);
+}
+
 /* Status Icons - Enhanced */
 .icon-check::before {
   content: "✓";

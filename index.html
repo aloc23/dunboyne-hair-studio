@@ -144,12 +144,7 @@
             <select id="analyzer-service">
               <option value="">Choose a service to analyze...</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label for="analyzer-action">Action</label>
-            <button class="btn" id="load-service-btn" onclick="loadServiceForAnalysis()">
-              <span class="icon icon-calculator"></span>Load Service Data
-            </button>
+            <small class="help-text">Cost breakdown will auto-populate when you select a service</small>
           </div>
         </div>
 
@@ -204,7 +199,7 @@
 
           <div class="analyzer-actions">
             <button class="btn" id="calculate-btn" onclick="calculateAnalysis()">
-              <span class="icon icon-calculator"></span>Calculate
+              <span class="icon icon-calculator"></span>Recalculate
             </button>
             <button class="btn primary" id="save-to-catalog-btn" onclick="saveAnalyzedService()" style="display: none;">
               <span class="icon icon-save"></span>Save to Catalog

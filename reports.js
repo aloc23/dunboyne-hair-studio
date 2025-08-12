@@ -41,6 +41,7 @@ function renderReports(fromISO, toISO){
           <div>
             <button class="btn" onclick="exportReport('kpi')"><span class="icon icon-export"></span>Export PDF</button>
             <button class="btn" onclick="exportReportExcel('kpi')"><span class="icon icon-export"></span>Export Excel</button>
+            <button class="btn" onclick="emailReport('kpi')"><span class="icon icon-email"></span>Email Report</button>
           </div>
         </div>
         <div class="kpis">
@@ -90,6 +91,7 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
       <div>
         <button class="btn" onclick="exportReport('pl')"><span class="icon icon-export"></span>Export PDF</button>
         <button class="btn" onclick="exportReportExcel('pl')"><span class="icon icon-export"></span>Export Excel</button>
+        <button class="btn" onclick="emailReport('pl')"><span class="icon icon-email"></span>Email Report</button>
       </div>
     </div>
     <div class="report-period">Period: ${fromISO || 'All time'} to ${toISO || 'Present'}</div>
@@ -147,6 +149,7 @@ function generateBalanceSheet(fromISO, toISO) {
       <div>
         <button class="btn" onclick="exportReport('bs')"><span class="icon icon-export"></span>Export PDF</button>
         <button class="btn" onclick="exportReportExcel('bs')"><span class="icon icon-export"></span>Export Excel</button>
+        <button class="btn" onclick="emailReport('bs')"><span class="icon icon-email"></span>Email Report</button>
       </div>
     </div>
     <div class="report-period">As of: ${toISO || new Date().toISOString().slice(0,10)}</div>
@@ -214,6 +217,7 @@ function generateMonthlySummary(fromISO, toISO) {
       <div>
         <button class="btn" onclick="exportReport('monthly')"><span class="icon icon-export"></span>Export PDF</button>
         <button class="btn" onclick="exportReportExcel('monthly')"><span class="icon icon-export"></span>Export Excel</button>
+        <button class="btn" onclick="emailReport('monthly')"><span class="icon icon-email"></span>Email Report</button>
       </div>
     </div>
     
@@ -344,6 +348,18 @@ function initializeServiceAnalyzer() {
       element.addEventListener('input', calculateAnalysis);
     }
   });
+  
+  // Auto-load service data when service is selected (no button click needed)
+  const serviceSelect = document.getElementById('analyzer-service');
+  if (serviceSelect) {
+    serviceSelect.addEventListener('change', function() {
+      if (this.value) {
+        loadServiceForAnalysis();
+      } else {
+        resetAnalyzer();
+      }
+    });
+  }
 }
 
 function populateServiceDropdown() {
@@ -364,7 +380,8 @@ function populateServiceDropdown() {
 function loadServiceForAnalysis() {
   const serviceId = document.getElementById('analyzer-service').value;
   if (!serviceId) {
-    alert('Please select a service first');
+    // Hide the cost breakdown section if no service selected
+    document.getElementById('cost-breakdown').style.display = 'none';
     return;
   }
   
@@ -372,7 +389,7 @@ function loadServiceForAnalysis() {
   const service = catalog.find(s => s.id === serviceId);
   
   if (!service) {
-    alert('Service not found');
+    matrixNotifications.error('Service not found');
     return;
   }
   
@@ -383,11 +400,19 @@ function loadServiceForAnalysis() {
   document.getElementById('analyzer-utilities').value = service.utilities.toFixed(2);
   document.getElementById('analyzer-labour').value = service.labour.toFixed(2);
   
-  // Show the cost breakdown section
-  document.getElementById('cost-breakdown').style.display = 'block';
+  // Show the cost breakdown section with smooth animation
+  const costBreakdown = document.getElementById('cost-breakdown');
+  costBreakdown.style.display = 'block';
+  
+  // Add Matrix Nova glow effect for enhanced UX
+  costBreakdown.classList.add('matrix-glow');
+  setTimeout(() => costBreakdown.classList.remove('matrix-glow'), 1000);
   
   // Calculate initial analysis
   calculateAnalysis();
+  
+  // Show success notification
+  matrixNotifications.success(`Loaded data for: ${service.name}`, 3000);
 }
 
 function calculateAnalysis() {
@@ -432,7 +457,7 @@ function saveAnalyzedService() {
   const labour = parseFloat(document.getElementById('analyzer-labour').value) || 0;
   
   if (!price || !products || !utilities || !labour) {
-    alert('Please fill in all cost fields before saving');
+    matrixNotifications.error('Please fill in all cost fields before saving');
     return;
   }
   
@@ -442,13 +467,21 @@ function saveAnalyzedService() {
     // Update existing service
     const service = catalog.find(s => s.id === serviceId);
     if (service) {
+      const oldPrice = service.price;
       service.price = price;
       service.mins = mins;
       service.products = products;
       service.utilities = utilities;
       service.labour = labour;
       upsertService(service);
-      alert('Service updated successfully!');
+      
+      matrixNotifications.success(`Service "${service.name}" updated successfully! Price changed from €${oldPrice.toFixed(2)} to €${price.toFixed(2)}`, 5000);
+      
+      // Refresh the dropdown to show updated prices
+      populateServiceDropdown();
+      
+      // Set the dropdown to the updated service
+      document.getElementById('analyzer-service').value = serviceId;
     }
   } else {
     // Create new service
@@ -465,10 +498,19 @@ function saveAnalyzedService() {
     };
     
     upsertService(newService);
-    alert('New service added to catalog!');
+    matrixNotifications.success(`New service "${serviceName}" added to catalog with price €${price.toFixed(2)}!`, 5000);
     
     // Refresh the dropdown
     populateServiceDropdown();
+    
+    // Automatically select the new service
+    setTimeout(() => {
+      const updatedCatalog = getCatalog();
+      const addedService = updatedCatalog.find(s => s.name === serviceName);
+      if (addedService) {
+        document.getElementById('analyzer-service').value = addedService.id;
+      }
+    }, 100);
   }
   
   // Refresh catalog display if we're on the catalog tab
@@ -488,6 +530,217 @@ function resetAnalyzer() {
   
   document.getElementById('cost-breakdown').style.display = 'none';
   document.getElementById('save-to-catalog-btn').style.display = 'none';
+}
+
+function emailReport(reportType) {
+  const reportContent = document.getElementById(`${reportType}-content`);
+  if (!reportContent) {
+    matrixNotifications.error('Report content not found');
+    return;
+  }
+  
+  showEmailModal(reportType);
+}
+
+function showEmailModal(reportType) {
+  // Create modal HTML
+  const modalHTML = `
+    <div id="email-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3><span class="icon icon-email"></span>Email Report</h3>
+          <button class="btn subtle modal-close" onclick="closeEmailModal()">
+            <span class="icon icon-remove"></span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="email-form">
+            <div class="form-group">
+              <label for="accountant-email">Accountant Email</label>
+              <input type="email" id="accountant-email" placeholder="accountant@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="email-subject">Subject</label>
+              <input type="text" id="email-subject" value="Salon Accounting Report - ${reportType.toUpperCase()}" required>
+            </div>
+            <div class="form-group">
+              <label for="email-message">Message</label>
+              <textarea id="email-message" rows="4" placeholder="Please find attached the salon accounting report...">Please find attached the salon accounting report for your review.
+
+Generated on: ${new Date().toLocaleString()}
+
+Best regards,
+Dunboyne Hair Studio</textarea>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="include-csv" checked>
+                Include CSV export for Excel compatibility
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeEmailModal()">Cancel</button>
+          <button class="btn primary" onclick="sendEmailReport('${reportType}')">
+            <span class="icon icon-email"></span>Send Email
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Add modal to document
+  const existingModal = document.getElementById('email-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // Show modal with animation
+  requestAnimationFrame(() => {
+    document.getElementById('email-modal').classList.add('active');
+  });
+  
+  // Focus on email input
+  document.getElementById('accountant-email').focus();
+  
+  // Load saved accountant email if available
+  const savedEmail = localStorage.getItem('accountant-email');
+  if (savedEmail) {
+    document.getElementById('accountant-email').value = savedEmail;
+  }
+}
+
+function closeEmailModal() {
+  const modal = document.getElementById('email-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    setTimeout(() => modal.remove(), 300);
+  }
+}
+
+function sendEmailReport(reportType) {
+  const form = document.getElementById('email-form');
+  if (!form.checkValidity()) {
+    matrixNotifications.error('Please fill in all required fields');
+    return;
+  }
+  
+  const email = document.getElementById('accountant-email').value;
+  const subject = document.getElementById('email-subject').value;
+  const message = document.getElementById('email-message').value;
+  const includeCsv = document.getElementById('include-csv').checked;
+  
+  // Save accountant email for future use
+  localStorage.setItem('accountant-email', email);
+  
+  // Generate report content for email
+  const reportContent = document.getElementById(`${reportType}-content`);
+  const reportHTML = generateEmailReport(reportType, reportContent);
+  
+  // Create mailto link with report data
+  const mailtoLink = createMailtoLink(email, subject, message, reportHTML, includeCsv);
+  
+  try {
+    // Open email client
+    window.location.href = mailtoLink;
+    
+    // Show success message
+    matrixNotifications.success('Email client opened with report data');
+    
+    // Close modal
+    closeEmailModal();
+    
+    // Also offer to copy the report content
+    setTimeout(() => {
+      if (confirm('Would you like to copy the report content to clipboard as backup?')) {
+        copyReportToClipboard(reportType);
+      }
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Error opening email client:', error);
+    matrixNotifications.error('Could not open email client. Report content copied to clipboard.');
+    copyReportToClipboard(reportType);
+    closeEmailModal();
+  }
+}
+
+function generateEmailReport(reportType, reportContent) {
+  const reportTitle = getReportTitle(reportType);
+  const reportHTML = reportContent.innerHTML;
+  
+  return `
+    <h1>${reportTitle}</h1>
+    <p>Generated on: ${new Date().toLocaleString()}</p>
+    <hr>
+    ${reportHTML}
+    <hr>
+    <p><em>This report was generated by Dunboyne Hair Studio accounting system.</em></p>
+  `;
+}
+
+function getReportTitle(reportType) {
+  const titles = {
+    'kpi': 'KPI Summary Report',
+    'pl': 'Profit & Loss Statement',
+    'bs': 'Balance Sheet',
+    'monthly': 'Monthly Summary Report'
+  };
+  return titles[reportType] || 'Accounting Report';
+}
+
+function createMailtoLink(email, subject, message, reportHTML, includeCsv) {
+  const encodedSubject = encodeURIComponent(subject);
+  const encodedMessage = encodeURIComponent(
+    message + '\n\n' + 
+    '--- REPORT DATA ---\n' + 
+    stripHTML(reportHTML) + 
+    '\n\n' + 
+    'Note: For better formatting, please use the PDF or Excel export options.'
+  );
+  
+  return `mailto:${email}?subject=${encodedSubject}&body=${encodedMessage}`;
+}
+
+function stripHTML(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function copyReportToClipboard(reportType) {
+  const reportContent = document.getElementById(`${reportType}-content`);
+  const reportText = stripHTML(reportContent.innerHTML);
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(reportText).then(() => {
+      matrixNotifications.success('Report content copied to clipboard');
+    }).catch(() => {
+      fallbackCopyTextToClipboard(reportText);
+    });
+  } else {
+    fallbackCopyTextToClipboard(reportText);
+  }
+}
+
+function fallbackCopyTextToClipboard(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    document.execCommand('copy');
+    matrixNotifications.success('Report content copied to clipboard');
+  } catch (err) {
+    matrixNotifications.error('Could not copy to clipboard');
+  }
+  
+  document.body.removeChild(textArea);
 }
 
 // Initialize service analyzer when the page loads
