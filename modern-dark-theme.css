@@ -1660,6 +1660,39 @@ select:focus-visible,
   font-style: italic;
 }
 
+/* Text utility classes */
+.text-success {
+  color: var(--success) !important;
+}
+
+.text-warning {
+  color: var(--warning) !important;
+}
+
+.text-danger {
+  color: var(--danger) !important;
+}
+
+.text-info {
+  color: var(--info) !important;
+}
+
+.text-primary {
+  color: var(--text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
 /* Modal animations */
 @keyframes modalFadeIn {
   from {

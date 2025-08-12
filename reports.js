@@ -338,6 +338,8 @@ function exportReportExcel(reportType) {
 
 // Service Analyzer Functions
 function initializeServiceAnalyzer() {
+  console.log('Initializing Service Analyzer...');
+  
   populateServiceDropdown();
   
   // Add event listeners for real-time calculation
@@ -345,6 +347,8 @@ function initializeServiceAnalyzer() {
   inputs.forEach(id => {
     const element = document.getElementById(id);
     if (element) {
+      // Remove existing listeners to avoid duplicates
+      element.removeEventListener('input', calculateAnalysis);
       element.addEventListener('input', calculateAnalysis);
     }
   });
@@ -352,13 +356,21 @@ function initializeServiceAnalyzer() {
   // Auto-load service data when service is selected (no button click needed)
   const serviceSelect = document.getElementById('analyzer-service');
   if (serviceSelect) {
-    serviceSelect.addEventListener('change', function() {
-      if (this.value) {
-        loadServiceForAnalysis();
-      } else {
-        resetAnalyzer();
-      }
-    });
+    console.log('Adding change listener to service select...');
+    // Remove existing listeners to avoid duplicates
+    serviceSelect.removeEventListener('change', handleServiceSelection);
+    serviceSelect.addEventListener('change', handleServiceSelection);
+  } else {
+    console.log('Service select element not found');
+  }
+}
+
+function handleServiceSelection(event) {
+  console.log('Service selection changed to:', event.target.value);
+  if (event.target.value) {
+    loadServiceForAnalysis();
+  } else {
+    resetAnalyzer();
   }
 }
 
@@ -435,9 +447,12 @@ function calculateAnalysis() {
   document.getElementById('recommended-price').textContent = `€${recommendedPrice.toFixed(2)}`;
   document.getElementById('profit-per-service').textContent = `€${profitPerService.toFixed(2)}`;
   
-  // Add color coding for profit
+  // Add color coding for profit and margin
   const profitElement = document.getElementById('profit-per-service');
+  const marginElement = document.getElementById('current-margin');
+  
   profitElement.className = `value ${profitPerService >= 0 ? 'text-success' : 'text-danger'}`;
+  marginElement.className = `value ${currentMargin >= targetMargin ? 'text-success' : 'text-warning'}`;
   
   // Show save button if we have valid data
   const saveBtn = document.getElementById('save-to-catalog-btn');
@@ -745,5 +760,17 @@ function fallbackCopyTextToClipboard(text) {
 
 // Initialize service analyzer when the page loads
 document.addEventListener('DOMContentLoaded', function() {
-  initializeServiceAnalyzer();
+  // Use setTimeout to ensure all other DOM manipulation is complete
+  setTimeout(() => {
+    initializeServiceAnalyzer();
+  }, 100);
+});
+
+// Also try to initialize when the reports tab is shown
+document.addEventListener('click', function(e) {
+  if (e.target.dataset && e.target.dataset.tab === 'reports') {
+    setTimeout(() => {
+      initializeServiceAnalyzer();
+    }, 100);
+  }
 });
