@@ -1244,3 +1244,291 @@ select:focus-visible,
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Enhanced Reports Styles */
+.report-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-2);
+}
+
+.report-tabs .btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+  border-bottom: none;
+  position: relative;
+  top: 1px;
+}
+
+.report-tabs .btn.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border);
+  border-bottom: 1px solid var(--bg-secondary);
+}
+
+.report-tabs .btn:hover:not(.active) {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.report-content {
+  min-height: 400px;
+}
+
+.report-section {
+  display: none;
+}
+
+.report-section.active {
+  display: block;
+}
+
+.report-period {
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-small);
+  border-left: 3px solid var(--accent-primary);
+}
+
+/* P&L and Balance Sheet specific styles */
+.pl-table,
+.bs-table {
+  background: var(--surface);
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+}
+
+.pl-table .section-header td,
+.bs-table .section-header td {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: var(--space-3) var(--space-2);
+  border-top: 2px solid var(--border);
+}
+
+.pl-table .subtotal td,
+.bs-table .subtotal td {
+  background: var(--surface-hover);
+  font-weight: 600;
+  border-top: 1px solid var(--border-muted);
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.pl-table .total td,
+.bs-table .total td {
+  background: var(--accent-primary);
+  color: var(--accent-fg);
+  font-weight: 700;
+  font-size: 1.1em;
+  border-top: 2px solid var(--accent-secondary);
+  border-bottom: 2px solid var(--accent-secondary);
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-success {
+  color: var(--success-emphasis);
+  font-weight: 600;
+}
+
+.text-danger {
+  color: var(--danger-emphasis);
+  font-weight: 600;
+}
+
+/* Service Analyzer Styles */
+.service-analyzer {
+  background: var(--surface);
+  border-radius: var(--radius-large);
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  border: 1px solid var(--border);
+}
+
+.service-analyzer h3 {
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.analyzer-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.analyzer-controls .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.analyzer-controls label {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.analyzer-controls select,
+.analyzer-controls input {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: var(--space-2);
+  border-radius: var(--radius-small);
+  transition: all 0.2s ease;
+}
+
+.analyzer-controls select:focus,
+.analyzer-controls input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(46, 160, 67, 0.2);
+}
+
+.cost-breakdown {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-medium);
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+}
+
+.cost-breakdown h4 {
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.cost-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.cost-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border-subtle);
+}
+
+.cost-item label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.cost-item input {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-small);
+  width: 80px;
+  text-align: right;
+}
+
+.cost-summary {
+  border-top: 2px solid var(--border);
+  padding-top: var(--space-3);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+
+.cost-summary .summary-item {
+  background: var(--surface-hover);
+  padding: var(--space-2);
+  border-radius: var(--radius-small);
+  text-align: center;
+}
+
+.cost-summary .summary-item.total {
+  background: var(--accent-primary);
+  color: var(--accent-fg);
+  font-weight: 700;
+}
+
+.cost-summary .summary-item label {
+  display: block;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.cost-summary .summary-item.total label {
+  color: var(--accent-fg);
+}
+
+.cost-summary .summary-item .value {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.analyzer-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+
+.analyzer-actions .btn {
+  min-width: 140px;
+}
+
+/* Margin utilities for reports */
+.mb {
+  margin-bottom: var(--space-3);
+}
+
+.mt {
+  margin-top: var(--space-3);
+}
+
+/* Export button styling */
+.export-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Responsive adjustments for reports */
+@media (max-width: 768px) {
+  .report-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .analyzer-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .cost-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cost-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .analyzer-actions {
+    flex-direction: column;
+  }
+}
+}

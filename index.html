@@ -134,6 +134,87 @@
           <button class="btn danger" id="close-month-btn"><span class="icon icon-warning"></span>Close Month (Post COGS Summary & Lock)</button>
         </div>
       </div>
+
+      <!-- Service Analyzer -->
+      <div class="card service-analyzer">
+        <h3><span class="icon icon-calculator"></span>Service Analyzer</h3>
+        <div class="analyzer-controls">
+          <div class="form-group">
+            <label for="analyzer-service">Select Service</label>
+            <select id="analyzer-service">
+              <option value="">Choose a service to analyze...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="analyzer-action">Action</label>
+            <button class="btn" id="load-service-btn" onclick="loadServiceForAnalysis()">
+              <span class="icon icon-calculator"></span>Load Service Data
+            </button>
+          </div>
+        </div>
+
+        <div class="cost-breakdown" id="cost-breakdown" style="display: none;">
+          <h4>Cost Breakdown & Analysis</h4>
+          
+          <div class="cost-breakdown-grid">
+            <div class="cost-item">
+              <label>Current Price (€)</label>
+              <input type="number" step="0.01" id="analyzer-price" placeholder="0.00">
+            </div>
+            <div class="cost-item">
+              <label>Duration (mins)</label>
+              <input type="number" id="analyzer-mins" placeholder="0">
+            </div>
+            <div class="cost-item">
+              <label>Products Cost (€)</label>
+              <input type="number" step="0.01" id="analyzer-products" placeholder="0.00">
+            </div>
+            <div class="cost-item">
+              <label>Utilities Cost (€)</label>
+              <input type="number" step="0.01" id="analyzer-utilities" placeholder="0.00">
+            </div>
+            <div class="cost-item">
+              <label>Labour Cost (€)</label>
+              <input type="number" step="0.01" id="analyzer-labour" placeholder="0.00">
+            </div>
+            <div class="cost-item">
+              <label>Target Margin (%)</label>
+              <input type="number" step="0.1" id="analyzer-margin" placeholder="0" value="30">
+            </div>
+          </div>
+
+          <div class="cost-summary" id="cost-summary">
+            <div class="summary-item">
+              <label>Total Cost</label>
+              <div class="value" id="total-cost">€0.00</div>
+            </div>
+            <div class="summary-item">
+              <label>Current Margin</label>
+              <div class="value" id="current-margin">0%</div>
+            </div>
+            <div class="summary-item">
+              <label>Recommended Price</label>
+              <div class="value" id="recommended-price">€0.00</div>
+            </div>
+            <div class="summary-item total">
+              <label>Profit per Service</label>
+              <div class="value" id="profit-per-service">€0.00</div>
+            </div>
+          </div>
+
+          <div class="analyzer-actions">
+            <button class="btn" id="calculate-btn" onclick="calculateAnalysis()">
+              <span class="icon icon-calculator"></span>Calculate
+            </button>
+            <button class="btn primary" id="save-to-catalog-btn" onclick="saveAnalyzedService()" style="display: none;">
+              <span class="icon icon-save"></span>Save to Catalog
+            </button>
+            <button class="btn" id="reset-analyzer-btn" onclick="resetAnalyzer()">
+              <span class="icon icon-remove"></span>Reset
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Settings -->
