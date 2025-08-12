@@ -5,17 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Salon Accounting</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="modern-dark-theme.css"/>
+  <link rel="stylesheet" href="icons.css"/>
 </head>
 <body>
   <header class="topbar">
     <h1>Salon Accounting</h1>
     <nav class="tabs" id="tabs">
-      <button data-tab="takings" class="tab active">Sales & Takings</button>
-      <button data-tab="expenses" class="tab">Expenses</button>
-      <button data-tab="catalog" class="tab">Service Catalog</button>
-      <button data-tab="reports" class="tab">Reports</button>
-      <button data-tab="settings" class="tab">Settings</button>
+      <button data-tab="takings" class="tab active"><span class="icon icon-sales"></span>Sales & Takings</button>
+      <button data-tab="expenses" class="tab"><span class="icon icon-expenses"></span>Expenses</button>
+      <button data-tab="catalog" class="tab"><span class="icon icon-catalog"></span>Service Catalog</button>
+      <button data-tab="reports" class="tab"><span class="icon icon-reports"></span>Reports</button>
+      <button data-tab="settings" class="tab"><span class="icon icon-settings"></span>Settings</button>
     </nav>
   </header>
 
@@ -45,30 +46,30 @@
         <table class="table" id="service-lines">
           <thead>
             <tr>
-              <th style="width:28%">Service</th>
-              <th>Qty</th>
-              <th>Unit Price (€)</th>
-              <th>Discount (€)</th>
-              <th>Voucher (€)</th>
-              <th>Line Total (€)</th>
+              <th style="width:28%"><span class="icon icon-service"></span> Service</th>
+              <th><span class="icon icon-calculator"></span> Qty</th>
+              <th><span class="icon icon-euro"></span> Unit Price (€)</th>
+              <th><span class="icon icon-euro"></span> Discount (€)</th>
+              <th><span class="icon icon-euro"></span> Voucher (€)</th>
+              <th><span class="icon icon-euro"></span> Line Total (€)</th>
               <th></th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
-        <button class="btn" id="add-line">Add Service</button>
+        <button class="btn" id="add-line"><span class="icon icon-add"></span>Add Service</button>
 
         <div class="row mt">
-          <label>Retail Gross (€) <input type="number" step="0.01" id="retail-gross" value="0"/></label>
-          <label>Cash In (€) <input type="number" step="0.01" id="cash-in" value="0"/></label>
-          <label>Card In (€) <input type="number" step="0.01" id="card-in" value="0"/></label>
+          <label><span class="icon icon-cash"></span> Retail Gross (€) <input type="number" step="0.01" id="retail-gross" value="0"/></label>
+          <label><span class="icon icon-cash"></span> Cash In (€) <input type="number" step="0.01" id="cash-in" value="0"/></label>
+          <label><span class="icon icon-card"></span> Card In (€) <input type="number" step="0.01" id="card-in" value="0"/></label>
         </div>
 
         <div class="kpis" id="takings-kpis"></div>
 
         <div class="row mt">
-          <button class="btn primary" id="post-takings">Post Takings</button>
-          <button class="btn subtle" id="reset-takings">Reset</button>
+          <button class="btn primary" id="post-takings"><span class="icon icon-save"></span>Post Takings</button>
+          <button class="btn subtle" id="reset-takings"><span class="icon icon-remove"></span>Reset</button>
         </div>
       </div>
     </section>
@@ -87,7 +88,7 @@
           <label>VAT % <input type="number" step="0.01" id="exp-vat-rate" value="23"></label>
         </div>
         <div class="row mt">
-          <button class="btn primary" id="post-expense">Post Expense</button>
+          <button class="btn primary" id="post-expense"><span class="icon icon-save"></span>Post Expense</button>
         </div>
         <h3 class="mt">Recent</h3>
         <table class="table" id="exp-list">
@@ -103,8 +104,8 @@
         <div class="row between">
           <h2>Service Catalog</h2>
           <div>
-            <button class="btn" id="add-service">Add Service</button>
-            <button class="btn" id="export-price-list">Export Price List</button>
+            <button class="btn" id="add-service"><span class="icon icon-add"></span>Add Service</button>
+            <button class="btn" id="export-price-list"><span class="icon icon-export"></span>Export Price List</button>
           </div>
         </div>
         <table class="table" id="catalog-table">
@@ -125,12 +126,12 @@
         <div class="row">
           <label>From <input type="date" id="rep-from"></label>
           <label>To <input type="date" id="rep-to"></label>
-          <button class="btn" id="run-reports">Run</button>
+          <button class="btn" id="run-reports"><span class="icon icon-reports"></span>Run</button>
         </div>
         <div id="report-output" class="mt"></div>
         <div class="row mt">
           <label>Month <input type="month" id="close-month"></label>
-          <button class="btn danger" id="close-month-btn">Close Month (Post COGS Summary & Lock)</button>
+          <button class="btn danger" id="close-month-btn"><span class="icon icon-warning"></span>Close Month (Post COGS Summary & Lock)</button>
         </div>
       </div>
     </section>
@@ -145,13 +146,13 @@
           <tbody></tbody>
         </table>
         <div class="row mt">
-          <button class="btn" id="add-utility">Add Utility</button>
+          <button class="btn" id="add-utility"><span class="icon icon-add"></span>Add Utility</button>
           <div class="chip">Total €/hr: <span id="util-eur-hr">0.00</span></div>
         </div>
         <h3 class="mt">Expense Categories</h3>
         <div class="row">
           <input type="text" id="new-cat" placeholder="Add category"/>
-          <button class="btn" id="add-cat">Add</button>
+          <button class="btn" id="add-cat"><span class="icon icon-add"></span>Add</button>
         </div>
         <ul id="cat-list" class="pilllist mt"></ul>
       </div>

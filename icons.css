@@ -1,0 +1,418 @@
+/* Icons CSS - Modern Icon Set using Unicode and CSS */
+
+/* Icon Base Styles */
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+  vertical-align: middle;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  speak: none;
+}
+
+.icon-sm {
+  width: 0.875em;
+  height: 0.875em;
+}
+
+.icon-lg {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.icon-xl {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+/* Navigation Icons */
+.icon-sales::before {
+  content: "💰";
+}
+
+.icon-expenses::before {
+  content: "📊";
+}
+
+.icon-catalog::before {
+  content: "📋";
+}
+
+.icon-reports::before {
+  content: "📈";
+}
+
+.icon-settings::before {
+  content: "⚙️";
+}
+
+/* Action Icons */
+.icon-add::before {
+  content: "➕";
+}
+
+.icon-remove::before {
+  content: "✕";
+}
+
+.icon-edit::before {
+  content: "✏️";
+}
+
+.icon-save::before {
+  content: "💾";
+}
+
+.icon-delete::before {
+  content: "🗑️";
+}
+
+.icon-export::before {
+  content: "📤";
+}
+
+.icon-import::before {
+  content: "📥";
+}
+
+.icon-print::before {
+  content: "🖨️";
+}
+
+.icon-download::before {
+  content: "⬇️";
+}
+
+.icon-upload::before {
+  content: "⬆️";
+}
+
+/* Status Icons */
+.icon-check::before {
+  content: "✅";
+}
+
+.icon-warning::before {
+  content: "⚠️";
+}
+
+.icon-error::before {
+  content: "❌";
+}
+
+.icon-info::before {
+  content: "ℹ️";
+}
+
+.icon-success::before {
+  content: "✓";
+}
+
+/* Financial Icons */
+.icon-euro::before {
+  content: "€";
+}
+
+.icon-cash::before {
+  content: "💵";
+}
+
+.icon-card::before {
+  content: "💳";
+}
+
+.icon-calculator::before {
+  content: "🧮";
+}
+
+.icon-receipt::before {
+  content: "🧾";
+}
+
+.icon-invoice::before {
+  content: "📄";
+}
+
+/* Business Icons */
+.icon-customer::before {
+  content: "👤";
+}
+
+.icon-service::before {
+  content: "✂️";
+}
+
+.icon-product::before {
+  content: "🧴";
+}
+
+.icon-time::before {
+  content: "⏰";
+}
+
+.icon-calendar::before {
+  content: "📅";
+}
+
+.icon-appointment::before {
+  content: "📝";
+}
+
+/* Navigation and UI Icons */
+.icon-menu::before {
+  content: "☰";
+}
+
+.icon-close::before {
+  content: "✕";
+}
+
+.icon-back::before {
+  content: "←";
+}
+
+.icon-forward::before {
+  content: "→";
+}
+
+.icon-up::before {
+  content: "↑";
+}
+
+.icon-down::before {
+  content: "↓";
+}
+
+.icon-expand::before {
+  content: "⤢";
+}
+
+.icon-collapse::before {
+  content: "⤡";
+}
+
+/* Advanced CSS Icons using pure CSS */
+.icon-loading {
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.icon-chevron-right {
+  width: 0;
+  height: 0;
+  border-left: 6px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  margin: 0 4px;
+}
+
+.icon-chevron-down {
+  width: 0;
+  height: 0;
+  border-top: 6px solid currentColor;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  margin: 0 4px;
+}
+
+.icon-search {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  position: relative;
+}
+
+.icon-search::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 6px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+.icon-filter {
+  width: 14px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-bottom: none;
+  border-radius: 2px 2px 0 0;
+  position: relative;
+}
+
+.icon-filter::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 4px;
+  width: 4px;
+  height: 6px;
+  border: 2px solid currentColor;
+  border-top: none;
+  border-radius: 0 0 2px 2px;
+}
+
+/* Icon Colors */
+.icon-primary {
+  color: var(--accent-primary);
+}
+
+.icon-secondary {
+  color: var(--text-secondary);
+}
+
+.icon-success {
+  color: var(--success);
+}
+
+.icon-warning {
+  color: var(--warning);
+}
+
+.icon-danger {
+  color: var(--danger);
+}
+
+.icon-info {
+  color: var(--info);
+}
+
+.icon-muted {
+  color: var(--text-muted);
+}
+
+/* Icon Buttons */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.btn-icon:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-small);
+}
+
+.btn-icon.primary {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-fg);
+}
+
+.btn-icon.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--accent-fg);
+}
+
+.btn-icon.success {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--accent-fg);
+}
+
+/* Icon with text combinations */
+.btn-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.btn-with-icon .icon {
+  margin-right: var(--space-1);
+}
+
+/* Utility classes for icon positioning */
+.icon-left {
+  margin-right: var(--space-2);
+}
+
+.icon-right {
+  margin-left: var(--space-2);
+}
+
+/* Responsive icon sizing */
+@media (max-width: 768px) {
+  .icon-lg {
+    width: 1.125em;
+    height: 1.125em;
+  }
+  
+  .icon-xl {
+    width: 1.25em;
+    height: 1.25em;
+  }
+  
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Animation for interactive icons */
+.icon-interactive {
+  transition: transform var(--transition-base);
+}
+
+.icon-interactive:hover {
+  transform: scale(1.1);
+}
+
+.icon-rotate {
+  transition: transform var(--transition-base);
+}
+
+.icon-rotate:hover {
+  transform: rotate(180deg);
+}
+
+/* Special animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.icon-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+.icon-bounce:hover {
+  animation: bounce 1s;
+}
+
+/* Icon states */
+.icon-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icon-active {
+  color: var(--accent-primary);
+}
