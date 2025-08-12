@@ -381,6 +381,8 @@ document.getElementById('run-reports').addEventListener('click', ()=>{
   const from = document.getElementById('rep-from').value || null;
   const to = document.getElementById('rep-to').value || null;
   renderReports(from, to);
+  // Show KPI tab by default
+  setTimeout(() => showReportTab('kpi'), 100);
 });
 document.getElementById('close-month-btn').addEventListener('click', ()=>{
   const ym = document.getElementById('close-month').value;
