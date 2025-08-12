@@ -28,137 +28,192 @@
   height: 1.5em;
 }
 
-/* Navigation Icons */
+/* Navigation Icons - Modern SVG-based */
 .icon-sales::before {
-  content: "💰";
+  content: "💲";
+  font-weight: bold;
+  color: var(--success);
 }
 
 .icon-expenses::before {
   content: "📊";
+  color: var(--warning);
 }
 
 .icon-catalog::before {
   content: "📋";
+  color: var(--info);
 }
 
 .icon-reports::before {
   content: "📈";
+  color: var(--accent-primary);
 }
 
 .icon-settings::before {
-  content: "⚙️";
+  content: "⚙";
+  color: var(--text-secondary);
 }
 
-/* Action Icons */
+/* Action Icons - Enhanced */
 .icon-add::before {
-  content: "➕";
+  content: "+";
+  font-weight: bold;
+  font-size: 1.2em;
+  color: var(--success);
 }
 
 .icon-remove::before {
-  content: "✕";
+  content: "×";
+  font-weight: bold;
+  font-size: 1.2em;
+  color: var(--danger);
 }
 
 .icon-edit::before {
-  content: "✏️";
+  content: "✎";
+  color: var(--accent-primary);
 }
 
 .icon-save::before {
   content: "💾";
+  color: var(--success);
 }
 
 .icon-delete::before {
-  content: "🗑️";
+  content: "🗑";
+  color: var(--danger);
 }
 
 .icon-export::before {
-  content: "📤";
+  content: "↗";
+  font-weight: bold;
+  color: var(--accent-primary);
 }
 
 .icon-import::before {
-  content: "📥";
+  content: "↙";
+  font-weight: bold;
+  color: var(--accent-primary);
 }
 
 .icon-print::before {
-  content: "🖨️";
+  content: "🖨";
+  color: var(--text-secondary);
 }
 
 .icon-download::before {
-  content: "⬇️";
+  content: "⬇";
+  font-weight: bold;
+  color: var(--accent-primary);
 }
 
 .icon-upload::before {
-  content: "⬆️";
+  content: "⬆";
+  font-weight: bold;
+  color: var(--accent-primary);
 }
 
-/* Status Icons */
+/* Status Icons - Enhanced */
 .icon-check::before {
-  content: "✅";
+  content: "✓";
+  font-weight: bold;
+  color: var(--success);
 }
 
 .icon-warning::before {
-  content: "⚠️";
+  content: "⚠";
+  color: var(--warning);
 }
 
 .icon-error::before {
-  content: "❌";
+  content: "×";
+  font-weight: bold;
+  color: var(--danger);
 }
 
 .icon-info::before {
-  content: "ℹ️";
+  content: "i";
+  font-weight: bold;
+  color: var(--info);
+  font-style: italic;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
 }
 
 .icon-success::before {
   content: "✓";
+  font-weight: bold;
+  color: var(--success);
 }
 
-/* Financial Icons */
+/* Financial Icons - Enhanced */
 .icon-euro::before {
   content: "€";
+  font-weight: bold;
+  color: var(--success);
 }
 
 .icon-cash::before {
   content: "💵";
+  color: var(--success);
 }
 
 .icon-card::before {
   content: "💳";
+  color: var(--info);
 }
 
 .icon-calculator::before {
   content: "🧮";
+  color: var(--accent-primary);
 }
 
 .icon-receipt::before {
   content: "🧾";
+  color: var(--text-secondary);
 }
 
 .icon-invoice::before {
   content: "📄";
+  color: var(--text-secondary);
 }
 
-/* Business Icons */
+/* Business Icons - Enhanced */
 .icon-customer::before {
   content: "👤";
+  color: var(--text-secondary);
 }
 
 .icon-service::before {
-  content: "✂️";
+  content: "✂";
+  color: var(--accent-primary);
 }
 
 .icon-product::before {
   content: "🧴";
+  color: var(--info);
 }
 
 .icon-time::before {
   content: "⏰";
+  color: var(--warning);
 }
 
 .icon-calendar::before {
   content: "📅";
+  color: var(--text-secondary);
 }
 
 .icon-appointment::before {
   content: "📝";
+  color: var(--text-secondary);
 }
 
 /* Navigation and UI Icons */
