@@ -766,9 +766,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 100);
 });
 
-// Also try to initialize when the reports tab is shown
+// Also try to initialize when the reports tab or analyzer tab is shown
 document.addEventListener('click', function(e) {
-  if (e.target.dataset && e.target.dataset.tab === 'reports') {
+  if (e.target.dataset && (e.target.dataset.tab === 'reports' || e.target.dataset.tab === 'analyzer')) {
     setTimeout(() => {
       initializeServiceAnalyzer();
     }, 100);

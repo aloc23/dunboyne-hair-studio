@@ -15,6 +15,7 @@
       <button data-tab="takings" class="tab active"><span class="icon icon-sales"></span>Sales & Takings</button>
       <button data-tab="expenses" class="tab"><span class="icon icon-expenses"></span>Expenses</button>
       <button data-tab="catalog" class="tab"><span class="icon icon-catalog"></span>Service Catalog</button>
+      <button data-tab="analyzer" class="tab"><span class="icon icon-calculator"></span>Service Analyzer</button>
       <button data-tab="reports" class="tab"><span class="icon icon-reports"></span>Reports</button>
       <button data-tab="settings" class="tab"><span class="icon icon-settings"></span>Settings</button>
     </nav>
@@ -119,25 +120,10 @@
       </div>
     </section>
 
-    <!-- Reports -->
-    <section id="tab-reports" class="tabpane">
-      <div class="card">
-        <h2>Reports</h2>
-        <div class="row">
-          <label>From <input type="date" id="rep-from"></label>
-          <label>To <input type="date" id="rep-to"></label>
-          <button class="btn" id="run-reports"><span class="icon icon-reports"></span>Run</button>
-        </div>
-        <div id="report-output" class="mt"></div>
-        <div class="row mt">
-          <label>Month <input type="month" id="close-month"></label>
-          <button class="btn danger" id="close-month-btn"><span class="icon icon-warning"></span>Close Month (Post COGS Summary & Lock)</button>
-        </div>
-      </div>
-
-      <!-- Service Analyzer -->
+    <!-- Service Analyzer -->
+    <section id="tab-analyzer" class="tabpane">
       <div class="card service-analyzer">
-        <h3><span class="icon icon-calculator"></span>Service Analyzer</h3>
+        <h2><span class="icon icon-calculator"></span>Service Analyzer</h2>
         <div class="analyzer-controls">
           <div class="form-group">
             <label for="analyzer-service">Select Service</label>
@@ -208,6 +194,23 @@
               <span class="icon icon-remove"></span>Reset
             </button>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reports -->
+    <section id="tab-reports" class="tabpane">
+      <div class="card">
+        <h2>Reports</h2>
+        <div class="row">
+          <label>From <input type="date" id="rep-from"></label>
+          <label>To <input type="date" id="rep-to"></label>
+          <button class="btn" id="run-reports"><span class="icon icon-reports"></span>Run</button>
+        </div>
+        <div id="report-output" class="mt"></div>
+        <div class="row mt">
+          <label>Month <input type="month" id="close-month"></label>
+          <button class="btn danger" id="close-month-btn"><span class="icon icon-warning"></span>Close Month (Post COGS Summary & Lock)</button>
         </div>
       </div>
     </section>
