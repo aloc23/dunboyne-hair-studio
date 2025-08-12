@@ -97,7 +97,9 @@ function renderCatalog(){
 }
 document.getElementById('add-service').addEventListener('click',()=>{
   upsertService({name:'New Service', price:0, mins:30, products:0, utilities:0, labour:0});
-  renderCatalog(); renderServiceLines();
+  renderCatalog(); 
+  renderServiceLines();
+  MatrixNova.Notifications.success('New service added to catalog');
 });
 document.getElementById('export-price-list').addEventListener('click',()=>{
   const w = window.open('', '_blank');
@@ -109,27 +111,31 @@ document.getElementById('export-price-list').addEventListener('click',()=>{
 });
 renderCatalog();
 
-// Takings: service lines
+// Takings: service lines with enhanced Matrix Nova styling
 function newLineRow(){
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><select class="svc"></select></td>
-    <td><input type="number" class="qty" min="1" step="1" value="1"/></td>
-    <td><input type="number" class="price" step="0.01"/></td>
-    <td><input type="number" class="disc" step="0.01" value="0"/></td>
-    <td><input type="number" class="vouch" step="0.01" value="0"/></td>
+    <td><select class="svc form-input"></select></td>
+    <td><input type="number" class="qty form-input" min="1" step="1" value="1"/></td>
+    <td><input type="number" class="price form-input" step="0.01"/></td>
+    <td><input type="number" class="disc form-input" step="0.01" value="0"/></td>
+    <td><input type="number" class="vouch form-input" step="0.01" value="0"/></td>
     <td class="linetotal">0.00</td>
-    <td><button class="btn">✕</button></td>
+    <td><button class="btn btn-icon danger" title="Remove service line">×</button></td>
   `;
-  // populate service options
+  
+  // populate service options with enhanced styling
   const sel = tr.querySelector('.svc');
   const catalog = getCatalog();
-  sel.innerHTML = catalog.map(s=>`<option value="${s.id}" data-price="${s.price}">${s.name}</option>`).join('');
+  sel.innerHTML = '<option value="">Select a service...</option>' + 
+    catalog.map(s=>`<option value="${s.id}" data-price="${s.price}">${s.name} - €${s.price.toFixed(2)}</option>`).join('');
+  
   // default price to catalog
   const priceInput = tr.querySelector('.price');
   const qtyInput = tr.querySelector('.qty');
   const discInput = tr.querySelector('.disc');
   const vouchInput = tr.querySelector('.vouch');
+  
   function recalc(){
     const qty = +qtyInput.value || 0;
     const price = +priceInput.value || 0;
@@ -139,16 +145,44 @@ function newLineRow(){
     tr.querySelector('.linetotal').textContent = (gross>0?gross:0).toFixed(2);
     renderKPIs();
   }
+  
   sel.addEventListener('change', ()=>{
     const opt = sel.selectedOptions[0];
-    priceInput.value = (+opt.dataset.price).toFixed(2);
+    if (opt && opt.dataset.price) {
+      priceInput.value = (+opt.dataset.price).toFixed(2);
+      
+      // Add visual feedback
+      priceInput.classList.add('matrix-glow');
+      setTimeout(() => priceInput.classList.remove('matrix-glow'), 1000);
+      
+      // Show notification if available
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.success(`Selected ${opt.textContent}`);
+      }
+    }
     recalc();
   });
-  [priceInput, qtyInput, discInput, vouchInput].forEach(i=> i.addEventListener('input', recalc));
-  tr.querySelector('button').addEventListener('click',()=>{ tr.remove(); renderKPIs(); });
+  
+  [priceInput, qtyInput, discInput, vouchInput].forEach(i=> {
+    i.addEventListener('input', recalc);
+    i.addEventListener('focus', (e) => e.target.classList.add('focused'));
+    i.addEventListener('blur', (e) => e.target.classList.remove('focused'));
+  });
+  
+  tr.querySelector('button').addEventListener('click',()=>{ 
+    tr.remove(); 
+    renderKPIs();
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.info('Service line removed');
+    }
+  });
+  
   // init price
   const first = catalog[0];
-  if(first){ priceInput.value = first.price.toFixed(2); }
+  if(first){ 
+    sel.value = first.id;
+    priceInput.value = first.price.toFixed(2); 
+  }
   return tr;
 }
 
@@ -160,14 +194,17 @@ function renderServiceLines(){
     // update options on existing rows
     tbody.querySelectorAll('tr').forEach(tr=>{
       const sel = tr.querySelector('.svc');
-      const selected = sel.value;
-      const catalog = getCatalog();
-      sel.innerHTML = catalog.map(s=>`<option value="${s.id}" data-price="${s.price}">${s.name}</option>`).join('');
-      if([...sel.options].some(o=>o.value===selected)){
-        sel.value = selected;
-      }else if(catalog[0]){
-        sel.value = catalog[0].id;
-        tr.querySelector('.price').value = catalog[0].price.toFixed(2);
+      if (sel) {
+        const selected = sel.value;
+        const catalog = getCatalog();
+        sel.innerHTML = '<option value="">Select a service...</option>' + 
+          catalog.map(s=>`<option value="${s.id}" data-price="${s.price}">${s.name} - €${s.price.toFixed(2)}</option>`).join('');
+        if([...sel.options].some(o=>o.value===selected)){
+          sel.value = selected;
+        }else if(catalog[0]){
+          sel.value = catalog[0].id;
+          tr.querySelector('.price').value = catalog[0].price.toFixed(2);
+        }
       }
     });
   }
@@ -182,13 +219,14 @@ renderServiceLines();
 function renderKPIs(){
   const rows = Array.from(document.querySelectorAll('#service-lines tbody tr'));
   const lines = rows.map(tr=>{
-    const serviceId = tr.querySelector('.svc').value;
+    const serviceId = tr.querySelector('.svc')?.value || '';
     const qty = +tr.querySelector('.qty').value || 0;
     const unitPrice = +tr.querySelector('.price').value || 0;
     const discount = +tr.querySelector('.disc').value || 0;
     const voucher = +tr.querySelector('.vouch').value || 0;
     return {serviceId, qty, unitPrice, discount, voucher};
-  });
+  }).filter(l => l.serviceId); // Only include lines with selected services
+  
   const retailGross = +document.getElementById('retail-gross').value || 0;
   const vatMode = document.getElementById('vat-mode').value;
   const vatRate = +document.getElementById('vat-rate').value || 23;
@@ -196,12 +234,12 @@ function renderKPIs(){
   const cogs = computeCOGS(lines, getCatalog());
   const kpis = document.getElementById('takings-kpis');
   kpis.innerHTML = `
-    <div class="chip">Svc Gross € ${totals.svcGross.toFixed(2)}</div>
-    <div class="chip">Retail Gross € ${retailGross.toFixed(2)}</div>
+    <div class="chip success">Svc Gross € ${totals.svcGross.toFixed(2)}</div>
+    <div class="chip info">Retail Gross € ${retailGross.toFixed(2)}</div>
     <div class="chip">Revenue Gross € ${totals.totalGross.toFixed(2)}</div>
-    <div class="chip">VAT € ${totals.vat.toFixed(2)}</div>
-    <div class="chip">COGS € ${cogs.toFixed(2)}</div>
-    <div class="chip">Gross Profit € ${(totals.totalGross-cogs).toFixed(2)}</div>
+    <div class="chip warning">VAT € ${totals.vat.toFixed(2)}</div>
+    <div class="chip danger">COGS € ${cogs.toFixed(2)}</div>
+    <div class="chip success">Gross Profit € ${(totals.totalGross-cogs).toFixed(2)}</div>
   `;
 }
 ['retail-gross','vat-mode','vat-rate','cash-in','card-in'].forEach(id=>{
@@ -211,19 +249,37 @@ function renderKPIs(){
 
 document.getElementById('post-takings').addEventListener('click', ()=>{
   const date = document.getElementById('takings-date').value;
-  if(!date){ alert('Pick a date'); return; }
+  if(!date){ 
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Please select a date');
+    } else {
+      alert('Pick a date');
+    }
+    return; 
+  }
+  
   const mode = document.getElementById('takings-mode').value;
   const vatMode = document.getElementById('vat-mode').value;
   const vatRate = +document.getElementById('vat-rate').value || 23;
   const rows = Array.from(document.querySelectorAll('#service-lines tbody tr'));
   const lines = rows.map(tr=>{
-    const serviceId = tr.querySelector('.svc').value;
+    const serviceId = tr.querySelector('.svc')?.value || '';
     const qty = +tr.querySelector('.qty').value || 0;
     const unitPrice = +tr.querySelector('.price').value || 0;
     const discount = +tr.querySelector('.disc').value || 0;
     const voucher = +tr.querySelector('.vouch').value || 0;
     return {serviceId, qty, unitPrice, discount, voucher};
-  }).filter(l=>l.qty>0);
+  }).filter(l=>l.qty>0 && l.serviceId);
+  
+  if(lines.length === 0) {
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.warning('Please add at least one service line');
+    } else {
+      alert('Please add at least one service line');
+    }
+    return;
+  }
+  
   const entry = {
     date, mode, vatMode, vatRate,
     lines,
@@ -231,15 +287,41 @@ document.getElementById('post-takings').addEventListener('click', ()=>{
     cash:+document.getElementById('cash-in').value || 0,
     card:+document.getElementById('card-in').value || 0
   };
-  postTakings(entry);
-  alert('Takings posted');
-  // reset
-  document.querySelector('#service-lines tbody').innerHTML='';
-  renderServiceLines();
-  document.getElementById('retail-gross').value='0';
-  document.getElementById('cash-in').value='0';
-  document.getElementById('card-in').value='0';
-  renderKPIs();
+  
+  // Show loading state
+  const btn = document.getElementById('post-takings');
+  if (window.MatrixNova && window.MatrixNova.Loading) {
+    MatrixNova.Loading.show(btn.parentElement);
+  }
+  
+  setTimeout(() => {
+    try {
+      postTakings(entry);
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.success('Takings posted successfully!');
+      } else {
+        alert('Takings posted');
+      }
+      
+      // reset
+      document.querySelector('#service-lines tbody').innerHTML='';
+      renderServiceLines();
+      document.getElementById('retail-gross').value='0';
+      document.getElementById('cash-in').value='0';
+      document.getElementById('card-in').value='0';
+      renderKPIs();
+    } catch (error) {
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.error('Error posting takings: ' + error.message);
+      } else {
+        alert('Error posting takings: ' + error.message);
+      }
+    } finally {
+      if (window.MatrixNova && window.MatrixNova.Loading) {
+        MatrixNova.Loading.hide(btn.parentElement);
+      }
+    }
+  }, 500); // Simulate some processing time
 });
 
 document.getElementById('reset-takings').addEventListener('click', ()=>{
@@ -247,18 +329,41 @@ document.getElementById('reset-takings').addEventListener('click', ()=>{
   renderServiceLines(); renderKPIs();
 });
 
-// Expenses
+// Expenses with enhanced feedback
 document.getElementById('post-expense').addEventListener('click', ()=>{
   const date = document.getElementById('exp-date').value;
   const category = document.getElementById('exp-category').value;
   const supplier = document.getElementById('exp-supplier').value;
   const net = +document.getElementById('exp-net').value || 0;
   const vatRate = +document.getElementById('exp-vat-rate').value || 0;
-  if(!date){ alert('Pick a date'); return; }
-  if(net<=0){ alert('Enter net amount'); return; }
-  postExpense({date, category, supplier, net, vatRate});
-  renderExpenseList();
-  alert('Expense posted');
+  
+  if(!date){ 
+    MatrixNova.Notifications.error('Please select a date');
+    return; 
+  }
+  if(net<=0){ 
+    MatrixNova.Notifications.error('Please enter a valid net amount');
+    return; 
+  }
+  
+  const btn = document.getElementById('post-expense');
+  MatrixNova.Loading.show(btn.parentElement);
+  
+  setTimeout(() => {
+    try {
+      postExpense({date, category, supplier, net, vatRate});
+      renderExpenseList();
+      MatrixNova.Notifications.success('Expense posted successfully!');
+      
+      // Clear form
+      document.getElementById('exp-supplier').value = '';
+      document.getElementById('exp-net').value = '0';
+    } catch (error) {
+      MatrixNova.Notifications.error('Error posting expense: ' + error.message);
+    } finally {
+      MatrixNova.Loading.hide(btn.parentElement);
+    }
+  }, 300);
 });
 
 function renderExpenseList(){
