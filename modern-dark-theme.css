@@ -1530,6 +1530,58 @@ select:focus-visible,
   .analyzer-actions {
     flex-direction: column;
   }
+  
+  /* Service lines table responsive improvements */
+  #service-lines {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  #service-lines .table {
+    min-width: 600px;
+    margin-bottom: var(--space-3);
+  }
+  
+  /* Improve mobile form controls in service lines */
+  #service-lines .table select {
+    min-width: 150px;
+    font-size: var(--font-size-sm);
+  }
+  
+  #service-lines .table input[type="number"] {
+    width: 70px;
+    font-size: var(--font-size-sm);
+  }
+  
+  /* Add scrolling hint for mobile */
+  #service-lines::after {
+    content: "← Scroll horizontally to view all columns →";
+    display: block;
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    font-style: italic;
+  }
+}
+
+/* Additional mobile improvements for very small screens */
+@media (max-width: 480px) {
+  #service-lines .table {
+    min-width: 500px;
+  }
+  
+  #service-lines .table th,
+  #service-lines .table td {
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--font-size-xs);
+  }
+  
+  /* Ensure Add Service button is accessible */
+  #add-line {
+    width: 100%;
+    margin-top: var(--space-3);
+  }
 }
 
 /* Modal Styles */
