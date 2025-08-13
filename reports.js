@@ -130,6 +130,24 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
     }
   });
 
+  // Calculate labor costs from actual services performed
+  const takings = listTakings(fromISO, toISO);
+  const catalog = getCatalog();
+  const serviceLaborCosts = takings.reduce((total, taking) => {
+    return total + taking.lines.reduce((lineTotal, line) => {
+      const service = catalog.find(s => s.id === line.serviceId);
+      if (service) {
+        // Use laborCost field if available, fallback to labour field
+        const laborCost = service.laborCost || service.labour || 0;
+        return lineTotal + laborCost * (line.qty || 1);
+      }
+      return lineTotal;
+    }, 0);
+  }, 0);
+
+  // Total staff costs including both manual expenses and service labor costs
+  const totalStaffCosts = staffExpenses + serviceLaborCosts;
+
   return `
     <div class="row between mb">
       <h3>Profit & Loss Statement</h3>
@@ -193,7 +211,7 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
       <div class="collapsible-header" onclick="toggleCollapse('staff-expenses-section')">
         <h4>👥 STAFF EXPENSES</h4>
         <div class="section-summary">
-          <div class="summary-chip ${staffExpenses > 0 ? 'highlight' : ''}">Total: €${staffExpenses.toFixed(2)}</div>
+          <div class="summary-chip ${totalStaffCosts > 0 ? 'highlight' : ''}">Total: €${totalStaffCosts.toFixed(2)}</div>
         </div>
         <button class="collapsible-toggle">▼</button>
       </div>
@@ -202,7 +220,8 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
           <table class="table">
             <tbody>
               <tr><td>&nbsp;&nbsp;Staff Wages & Salaries</td><td class="text-right">(${staffExpenses.toFixed(2)})</td></tr>
-              <tr class="subtotal"><td><strong>Total Staff Expenses</strong></td><td class="text-right"><strong>(${staffExpenses.toFixed(2)})</strong></td></tr>
+              <tr><td>&nbsp;&nbsp;Service Labor Costs</td><td class="text-right">(${serviceLaborCosts.toFixed(2)})</td></tr>
+              <tr class="subtotal"><td><strong>Total Staff Expenses</strong></td><td class="text-right"><strong>(${totalStaffCosts.toFixed(2)})</strong></td></tr>
             </tbody>
           </table>
         </div>
@@ -269,21 +288,39 @@ function calculateInventoryValue(toISO) {
   const threeMonthsAgoISO = threeMonthsAgo.toISOString().slice(0, 10);
   const recentUsage = listTakings(threeMonthsAgoISO, toISO);
   
-  // Calculate total products cost from recent services
+  // Calculate total products cost from recent services using enhanced logic
   const totalProductsCost = recentUsage.reduce((sum, taking) => {
     return sum + taking.lines.reduce((lineSum, line) => {
       const service = catalog.find(s => s.id === line.serviceId);
       if (service) {
-        return lineSum + (service.products || 0) * (line.qty || 1);
+        // Use productSupplies field if available, fallback to products field
+        const productCost = service.productSupplies || service.products || 0;
+        return lineSum + productCost * (line.qty || 1);
       }
       return lineSum;
     }, 0);
   }, 0);
   
-  // Estimate inventory as 1.5 months worth of products cost
-  // This represents a reasonable buffer for a salon
-  const monthlyProductsCost = totalProductsCost / 3;
-  const estimatedInventory = monthlyProductsCost * 1.5;
+  // Enhanced inventory calculation with aggregate service cost data
+  // Calculate average monthly usage and apply proper inventory buffer
+  const monthlyProductsCost = recentUsage.length > 0 ? totalProductsCost / 3 : 0;
+  
+  // If no recent usage, calculate estimated inventory from service catalog
+  let baseInventoryValue = 0;
+  if (monthlyProductsCost === 0) {
+    // Calculate average product cost across all services as baseline
+    const avgProductCost = catalog.reduce((sum, service) => {
+      return sum + (service.productSupplies || service.products || 0);
+    }, 0) / Math.max(catalog.length, 1);
+    
+    // Estimate 2 months of basic inventory for new salon or low activity periods
+    baseInventoryValue = avgProductCost * catalog.length * 0.1; // 10% of total services capacity
+  }
+  
+  // Use 1.5 months buffer for active periods, 2 months for baseline
+  const estimatedInventory = monthlyProductsCost > 0 
+    ? monthlyProductsCost * 1.5 
+    : baseInventoryValue * 2;
   
   return Math.max(estimatedInventory, 0);
 }
@@ -350,7 +387,7 @@ function generateBalanceSheet(fromISO, toISO) {
     </table>
     
     <div class="mt">
-      <p><em>Note: Inventory value is automatically calculated based on recent service usage patterns (estimated 1.5 months of products stock). Cash and other asset values should be updated manually based on actual bank statements.</em></p>
+      <p><em>Note: Inventory value is automatically calculated using product supplies data from the service catalog and recent usage patterns. For active periods, it represents 1.5 months of stock based on service activity. For new or low-activity periods, it estimates 2 months of baseline inventory. Labor costs from services are tracked separately in staff expenses. Cash and other asset values should be updated manually based on actual bank statements.</em></p>
     </div>
   `;
 }
