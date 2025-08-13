@@ -43,7 +43,7 @@ const PRELOADED_SERVICES = [
   {name:"tbar short", price:40.00, mins:30, products:6.80, utilities:6.38, labour:7.30}
 ];
 
-const DEFAULT_EXPENSE_CATEGORIES = ["Rent","Electricity","Rates","Water","Insurance","Waste/Bins","Comms","Booking software","Supplies","Sundry"];
+const DEFAULT_EXPENSE_CATEGORIES = ["Rent","Electricity","Rates","Water","Insurance","Waste/Bins","Comms","Booking software","Supplies","Sundry","Staff Expenses"];
 
 const DEFAULT_UTILITIES = [
   {name:"Rent", perMonth:1600.00},

@@ -384,12 +384,52 @@ document.getElementById('run-reports').addEventListener('click', ()=>{
   // Show KPI tab by default
   setTimeout(() => showReportTab('kpi'), 100);
 });
+// Close Month functionality with dynamic button state
+function updateCloseMonthButton() {
+  const ym = document.getElementById('close-month').value;
+  const btn = document.getElementById('close-month-btn');
+  const btnContainer = btn.parentElement;
+  
+  if (!ym) {
+    btn.style.display = 'none';
+    return;
+  }
+  
+  if (monthLocked(ym)) {
+    btn.style.display = 'none';
+    // Show status message instead
+    let statusMsg = btnContainer.querySelector('.month-status');
+    if (!statusMsg) {
+      statusMsg = document.createElement('div');
+      statusMsg.className = 'month-status chip success';
+      btnContainer.appendChild(statusMsg);
+    }
+    statusMsg.textContent = `Month ${ym} is already closed and locked`;
+    statusMsg.style.display = 'block';
+  } else {
+    btn.style.display = 'inline-flex';
+    const statusMsg = btnContainer.querySelector('.month-status');
+    if (statusMsg) {
+      statusMsg.style.display = 'none';
+    }
+  }
+}
+
+// Update button state when month changes
+document.getElementById('close-month').addEventListener('change', updateCloseMonthButton);
+document.getElementById('close-month').addEventListener('input', updateCloseMonthButton);
+
+// Initialize button state
+setTimeout(updateCloseMonthButton, 100);
+
 document.getElementById('close-month-btn').addEventListener('click', ()=>{
   const ym = document.getElementById('close-month').value;
   if(!ym){ alert('Pick month'); return; }
   if(monthLocked(ym)){ alert('Month already locked'); return; }
   const cogs = closeMonthCOGS(ym);
   alert(`Posted COGS summary €${cogs.toFixed(2)} and locked ${ym}`);
+  // Update button state after closing
+  updateCloseMonthButton();
 });
 
 // Sync VAT settings back

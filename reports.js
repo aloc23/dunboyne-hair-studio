@@ -116,9 +116,18 @@ function renderReports(fromISO, toISO){
 
 function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, expenses, grossProfit, operatingProfit, fromISO, toISO) {
   const expensesByCategory = {};
+  let staffExpenses = 0;
+  let otherExpenses = 0;
+  
   expenses.forEach(e => {
     if (!expensesByCategory[e.category]) expensesByCategory[e.category] = 0;
     expensesByCategory[e.category] += e.net;
+    
+    if (e.category === 'Staff Expenses') {
+      staffExpenses += e.net;
+    } else {
+      otherExpenses += e.net;
+    }
   });
 
   return `
@@ -179,13 +188,12 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
       </div>
     </div>
     
-    <!-- Operating Expenses Section (Collapsible) -->
-    <div class="collapsible-section expanded" id="expenses-section">
-      <div class="collapsible-header" onclick="toggleCollapse('expenses-section')">
-        <h4>💸 OPERATING EXPENSES</h4>
+    <!-- Staff Expenses Section (Collapsible) -->
+    <div class="collapsible-section expanded" id="staff-expenses-section">
+      <div class="collapsible-header" onclick="toggleCollapse('staff-expenses-section')">
+        <h4>👥 STAFF EXPENSES</h4>
         <div class="section-summary">
-          <div class="summary-chip">Total: €${expenses.reduce((a,e)=>a+e.net,0).toFixed(2)}</div>
-          <div class="summary-chip">${Object.keys(expensesByCategory).length} Categories</div>
+          <div class="summary-chip ${staffExpenses > 0 ? 'highlight' : ''}">Total: €${staffExpenses.toFixed(2)}</div>
         </div>
         <button class="collapsible-toggle">▼</button>
       </div>
@@ -193,10 +201,34 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
         <div class="collapsible-body">
           <table class="table">
             <tbody>
-              ${Object.entries(expensesByCategory).map(([cat, amount]) => 
-                `<tr><td>&nbsp;&nbsp;${cat}</td><td class="text-right">(${amount.toFixed(2)})</td></tr>`
-              ).join('')}
-              <tr class="subtotal"><td><strong>Total Operating Expenses</strong></td><td class="text-right"><strong>(${expenses.reduce((a,e)=>a+e.net,0).toFixed(2)})</strong></td></tr>
+              <tr><td>&nbsp;&nbsp;Staff Wages & Salaries</td><td class="text-right">(${staffExpenses.toFixed(2)})</td></tr>
+              <tr class="subtotal"><td><strong>Total Staff Expenses</strong></td><td class="text-right"><strong>(${staffExpenses.toFixed(2)})</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Other Operating Expenses Section (Collapsible) -->
+    <div class="collapsible-section expanded" id="expenses-section">
+      <div class="collapsible-header" onclick="toggleCollapse('expenses-section')">
+        <h4>💸 OTHER OPERATING EXPENSES</h4>
+        <div class="section-summary">
+          <div class="summary-chip">Total: €${otherExpenses.toFixed(2)}</div>
+          <div class="summary-chip">${Object.keys(expensesByCategory).filter(cat => cat !== 'Staff Expenses').length} Categories</div>
+        </div>
+        <button class="collapsible-toggle">▼</button>
+      </div>
+      <div class="collapsible-content">
+        <div class="collapsible-body">
+          <table class="table">
+            <tbody>
+              ${Object.entries(expensesByCategory)
+                .filter(([cat]) => cat !== 'Staff Expenses')
+                .map(([cat, amount]) => 
+                  `<tr><td>&nbsp;&nbsp;${cat}</td><td class="text-right">(${amount.toFixed(2)})</td></tr>`
+                ).join('')}
+              <tr class="subtotal"><td><strong>Total Other Operating Expenses</strong></td><td class="text-right"><strong>(${otherExpenses.toFixed(2)})</strong></td></tr>
             </tbody>
           </table>
         </div>
@@ -216,6 +248,7 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
         <div class="collapsible-body">
           <table class="table">
             <tbody>
+              <tr><td>&nbsp;&nbsp;Total Expenses</td><td class="text-right">(${(staffExpenses + otherExpenses).toFixed(2)})</td></tr>
               <tr class="total"><td><strong>NET PROFIT</strong></td><td class="text-right"><strong>${operatingProfit.toFixed(2)}</strong></td></tr>
             </tbody>
           </table>
@@ -225,9 +258,42 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
   `;
 }
 
+// Calculate inventory value based on service catalog and usage patterns
+function calculateInventoryValue(toISO) {
+  const catalog = getCatalog();
+  const recentTakings = listTakings(null, toISO);
+  
+  // Get last 3 months of data for calculating average usage
+  const threeMonthsAgo = new Date(toISO || new Date());
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  const threeMonthsAgoISO = threeMonthsAgo.toISOString().slice(0, 10);
+  const recentUsage = listTakings(threeMonthsAgoISO, toISO);
+  
+  // Calculate total products cost from recent services
+  const totalProductsCost = recentUsage.reduce((sum, taking) => {
+    return sum + taking.lines.reduce((lineSum, line) => {
+      const service = catalog.find(s => s.id === line.serviceId);
+      if (service) {
+        return lineSum + (service.products || 0) * (line.qty || 1);
+      }
+      return lineSum;
+    }, 0);
+  }, 0);
+  
+  // Estimate inventory as 1.5 months worth of products cost
+  // This represents a reasonable buffer for a salon
+  const monthlyProductsCost = totalProductsCost / 3;
+  const estimatedInventory = monthlyProductsCost * 1.5;
+  
+  return Math.max(estimatedInventory, 0);
+}
+
 function generateBalanceSheet(fromISO, toISO) {
   const db = loadDB();
   const settings = getSettings();
+  
+  // Calculate inventory value automatically
+  const inventoryValue = calculateInventoryValue(toISO);
   
   // Simplified balance sheet - accumulate from beginning
   const allTakings = listTakings(null, toISO);
@@ -245,6 +311,9 @@ function generateBalanceSheet(fromISO, toISO) {
     const totals = computeSaleTotals(t.lines, t.retailGross||0, t.vatMode, t.vatRate);
     return sum + totals.vat;
   }, 0) - allExpenses.reduce((sum, e) => sum + e.vat, 0);
+  
+  // Calculate total assets including inventory
+  const totalAssets = inventoryValue;
 
   return `
     <div class="row between mb">
@@ -263,8 +332,8 @@ function generateBalanceSheet(fromISO, toISO) {
         <tr class="section-header"><td colspan="2"><strong>ASSETS</strong></td></tr>
         <tr><td>&nbsp;&nbsp;Cash at Bank</td><td class="text-right">-</td></tr>
         <tr><td>&nbsp;&nbsp;Accounts Receivable</td><td class="text-right">-</td></tr>
-        <tr><td>&nbsp;&nbsp;Inventory</td><td class="text-right">-</td></tr>
-        <tr class="subtotal"><td><strong>Total Assets</strong></td><td class="text-right"><strong>-</strong></td></tr>
+        <tr><td>&nbsp;&nbsp;Inventory <span class="text-muted" style="font-size: var(--font-size-xs);">(Auto-calculated)</span></td><td class="text-right">${inventoryValue.toFixed(2)}</td></tr>
+        <tr class="subtotal"><td><strong>Total Assets</strong></td><td class="text-right"><strong>${totalAssets.toFixed(2)}</strong></td></tr>
         
         <tr class="section-header"><td colspan="2"><strong>LIABILITIES</strong></td></tr>
         <tr><td>&nbsp;&nbsp;VAT Payable</td><td class="text-right">${vatLiability.toFixed(2)}</td></tr>
@@ -281,7 +350,7 @@ function generateBalanceSheet(fromISO, toISO) {
     </table>
     
     <div class="mt">
-      <p><em>Note: This is a simplified balance sheet. Asset values (cash, inventory) should be updated manually based on actual bank statements and stock counts.</em></p>
+      <p><em>Note: Inventory value is automatically calculated based on recent service usage patterns (estimated 1.5 months of products stock). Cash and other asset values should be updated manually based on actual bank statements.</em></p>
     </div>
   `;
 }
