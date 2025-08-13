@@ -366,6 +366,25 @@ document.getElementById('post-expense').addEventListener('click', ()=>{
   }, 300);
 });
 
+document.getElementById('reset-expense').addEventListener('click', ()=>{
+  // Reset all expense form fields
+  document.getElementById('exp-date').value = '';
+  document.getElementById('exp-supplier').value = '';
+  document.getElementById('exp-net').value = '0';
+  document.getElementById('exp-vat-rate').value = '23';
+  
+  // Reset category to first option
+  const categorySelect = document.getElementById('exp-category');
+  if (categorySelect.options.length > 0) {
+    categorySelect.selectedIndex = 0;
+  }
+  
+  // Show notification if available
+  if (window.MatrixNova && window.MatrixNova.Notifications) {
+    MatrixNova.Notifications.info('Expense form reset');
+  }
+});
+
 function renderExpenseList(){
   const tbody = document.querySelector('#exp-list tbody');
   const exps = listExpenses();
@@ -384,11 +403,17 @@ document.getElementById('run-reports').addEventListener('click', ()=>{
   // Show KPI tab by default
   setTimeout(() => showReportTab('kpi'), 100);
 });
-// Close Month functionality with dynamic button state
+// Close Month functionality with enhanced contextual warnings
 function updateCloseMonthButton() {
   const ym = document.getElementById('close-month').value;
   const btn = document.getElementById('close-month-btn');
   const btnContainer = btn.parentElement;
+  
+  // Clear any existing status messages
+  const existingStatus = btnContainer.querySelector('.month-status');
+  if (existingStatus) {
+    existingStatus.remove();
+  }
   
   if (!ym) {
     btn.style.display = 'none';
@@ -398,20 +423,18 @@ function updateCloseMonthButton() {
   if (monthLocked(ym)) {
     btn.style.display = 'none';
     // Show status message instead
-    let statusMsg = btnContainer.querySelector('.month-status');
-    if (!statusMsg) {
-      statusMsg = document.createElement('div');
-      statusMsg.className = 'month-status chip success';
-      btnContainer.appendChild(statusMsg);
-    }
-    statusMsg.textContent = `Month ${ym} is already closed and locked`;
-    statusMsg.style.display = 'block';
+    const statusMsg = document.createElement('div');
+    statusMsg.className = 'month-status chip success';
+    statusMsg.innerHTML = `<span class="icon icon-check"></span>Month ${ym} is closed and locked`;
+    btnContainer.appendChild(statusMsg);
   } else {
     btn.style.display = 'inline-flex';
-    const statusMsg = btnContainer.querySelector('.month-status');
-    if (statusMsg) {
-      statusMsg.style.display = 'none';
-    }
+    
+    // Show warning message about what will happen
+    const warningMsg = document.createElement('div');
+    warningMsg.className = 'month-status chip warning';
+    warningMsg.innerHTML = `<span class="icon icon-warning"></span>This will post COGS summary and permanently lock ${ym}`;
+    btnContainer.appendChild(warningMsg);
   }
 }
 

@@ -1,11 +1,11 @@
-const CACHE_NAME = 'salon-acct-v2';
+const CACHE_NAME = 'salon-acct-v3';
 const STATIC_ASSETS = [
   './',
   'index.html',
   'manifest.webmanifest',
   // CSS files
   'styles.css',
-  'modern-dark-theme.css',
+  'modern-dark-theme.css', 
   'icons.css',
   // JavaScript files
   'app.js',
@@ -29,6 +29,9 @@ const STATIC_ASSETS = [
   'services_seed.json',
   'seed.json'
 ];
+
+// Dynamic cache for user data and generated content
+const DYNAMIC_CACHE = 'salon-acct-dynamic-v3';
 
 // Install event - cache static assets
 self.addEventListener('install', event => {
@@ -57,7 +60,7 @@ self.addEventListener('activate', event => {
       .then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
+            if (cacheName !== CACHE_NAME && cacheName !== DYNAMIC_CACHE) {
               console.log('Service Worker: Deleting old cache', cacheName);
               return caches.delete(cacheName);
             }
@@ -71,7 +74,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - serve from cache first, then network
+// Fetch event - enhanced offline support with better error handling
 self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
@@ -101,7 +104,11 @@ self.addEventListener('fetch', event => {
 
             // Cache successful responses for future use
             const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
+            const cacheName = STATIC_ASSETS.includes(event.request.url.replace(self.location.origin + '/', '')) 
+              ? CACHE_NAME 
+              : DYNAMIC_CACHE;
+              
+            caches.open(cacheName)
               .then(cache => {
                 cache.put(event.request, responseToCache);
               });
@@ -110,9 +117,37 @@ self.addEventListener('fetch', event => {
           })
           .catch(error => {
             console.error('Service Worker: Network fetch failed', error);
-            // Return a fallback page or offline indicator if needed
+            
+            // Return offline fallback for specific requests
+            if (event.request.destination === 'document') {
+              return caches.match('./index.html');
+            }
+            
+            // For other requests, let the app handle the offline state
             throw error;
           });
       })
   );
+});
+
+// Background sync for when connection is restored
+self.addEventListener('sync', event => {
+  if (event.tag === 'background-sync') {
+    console.log('Service Worker: Background sync triggered');
+    event.waitUntil(
+      // Notify the main app that connection is restored
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'SYNC_RESTORED' });
+        });
+      })
+    );
+  }
+});
+
+// Handle offline/online status
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
