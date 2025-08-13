@@ -123,6 +123,11 @@ const Store = {
       };
     });
   },
+  async clearAllExpenses() {
+    const tx = await txStores(["expenses"], "readwrite");
+    const st = tx.objectStore("expenses");
+    return st.clear();
+  },
   async postTakings(t) {
     const tx = await txStores(["takings","journal"], "readwrite");
     const id = await new Promise((resolve)=>{

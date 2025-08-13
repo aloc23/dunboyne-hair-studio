@@ -62,6 +62,12 @@ function postExpense(exp){
   saveDB(db);
 }
 
+function clearAllExpenses(){
+  const db = loadDB();
+  db.expenses = [];
+  saveDB(db);
+}
+
 function getSettings(){ return loadDB().settings; }
 function saveSettings(s){ const db = loadDB(); db.settings = s; saveDB(db); }
 
