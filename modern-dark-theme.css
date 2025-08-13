@@ -1582,6 +1582,215 @@ select:focus-visible,
     width: 100%;
     margin-top: var(--space-3);
   }
+  
+  /* Improve catalog table on small screens */
+  #catalog-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  #catalog-table .table {
+    min-width: 700px;
+  }
+  
+  /* Better button layout for mobile */
+  .btn {
+    min-height: 44px; /* Touch target size */
+    touch-action: manipulation;
+  }
+  
+  /* Improve reports date selectors on mobile */
+  .report-date-controls {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .report-date-controls input[type="date"],
+  .report-date-controls input[type="month"] {
+    width: 100%;
+  }
+}
+
+/* Enhanced responsive design for tablets */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .tabs {
+    justify-content: space-between;
+  }
+  
+  .tabs .tab {
+    font-size: var(--font-size-sm);
+    padding: var(--space-2) var(--space-3);
+  }
+  
+  /* Optimize table layouts for tablet */
+  .table {
+    font-size: var(--font-size-sm);
+  }
+  
+  /* Better spacing for forms */
+  .row {
+    gap: var(--space-3);
+  }
+  
+  .card {
+    padding: var(--space-5);
+  }
+}
+
+/* Improve touch interfaces */
+@media (hover: none) and (pointer: coarse) {
+  .btn {
+    min-height: 48px;
+    font-size: var(--font-size-base);
+  }
+  
+  .btn-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  input, select, textarea {
+    min-height: 48px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .table th,
+  .table td {
+    padding: var(--space-3) var(--space-2);
+  }
+}
+
+/* Container queries for better responsive design */
+@container (max-width: 400px) {
+  .card {
+    padding: var(--space-3);
+  }
+  
+  .row {
+    flex-direction: column;
+  }
+}
+
+/* Print styles */
+@media print {
+  .topbar,
+  .foot {
+    display: none;
+  }
+  
+  .btn {
+    display: none;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #000;
+    break-inside: avoid;
+  }
+  
+  .table {
+    border: 1px solid #000;
+  }
+  
+  .table th,
+  .table td {
+    border: 1px solid #000;
+  }
+}
+
+/* Accessibility Improvements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus improvements for better keyboard navigation */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Skip to main content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--accent-primary);
+  color: var(--accent-fg);
+  padding: 8px;
+  text-decoration: none;
+  border-radius: var(--radius-small);
+  z-index: 1001;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #ffffff;
+    --border-subtle: #ffffff;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+  }
+}
+
+/* Enhanced Close Month Controls */
+.close-month-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.close-month-controls .month-status {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-small);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.close-month-controls .month-status.warning {
+  background: rgba(251, 133, 0, 0.1);
+  border: 1px solid var(--warning);
+  color: var(--warning-emphasis);
+}
+
+.close-month-controls .month-status.success {
+  background: rgba(46, 160, 67, 0.1);
+  border: 1px solid var(--success);
+  color: var(--success-emphasis);
+}
+
+.close-month-controls .month-status .icon {
+  font-size: var(--font-size-base);
 }
 
 /* Modal Styles */
