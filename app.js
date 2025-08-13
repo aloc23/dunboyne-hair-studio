@@ -397,31 +397,39 @@ document.getElementById('reset-expense').addEventListener('click', ()=>{
 
 // Clear all expenses functionality
 document.getElementById('clear-all-expenses').addEventListener('click', ()=>{
-  if (window.MatrixNova && window.MatrixNova.Notifications) {
-    MatrixNova.Notifications.confirm('Are you sure you want to clear all expense entries? This action cannot be undone.', {
-      onConfirm: () => {
-        const btn = document.getElementById('clear-all-expenses');
-        MatrixNova.Loading.show(btn.parentElement);
-        
-        setTimeout(() => {
-          try {
-            clearAllExpenses();
-            renderExpenseList();
-            MatrixNova.Notifications.success('All expenses cleared successfully!');
-          } catch (error) {
-            MatrixNova.Notifications.error('Error clearing expenses: ' + error.message);
-          } finally {
-            MatrixNova.Loading.hide(btn.parentElement);
-          }
-        }, 300);
-      }
-    });
-  } else {
-    if (confirm('Are you sure you want to clear all expense entries? This action cannot be undone.')) {
-      clearAllExpenses();
-      renderExpenseList();
-      alert('All expenses cleared!');
+  if (confirm('Are you sure you want to clear all expense entries? This action cannot be undone.')) {
+    const btn = document.getElementById('clear-all-expenses');
+    
+    // Add loading state if MatrixNova is available
+    if (window.MatrixNova && window.MatrixNova.Loading) {
+      MatrixNova.Loading.show(btn.parentElement);
     }
+    
+    setTimeout(() => {
+      try {
+        clearAllExpenses();
+        renderExpenseList();
+        
+        // Show success notification if available
+        if (window.MatrixNova && window.MatrixNova.Notifications) {
+          MatrixNova.Notifications.success('All expenses cleared successfully!');
+        } else {
+          alert('All expenses cleared!');
+        }
+      } catch (error) {
+        // Show error notification if available
+        if (window.MatrixNova && window.MatrixNova.Notifications) {
+          MatrixNova.Notifications.error('Error clearing expenses: ' + error.message);
+        } else {
+          alert('Error clearing expenses: ' + error.message);
+        }
+      } finally {
+        // Hide loading state if MatrixNova is available
+        if (window.MatrixNova && window.MatrixNova.Loading) {
+          MatrixNova.Loading.hide(btn.parentElement);
+        }
+      }
+    }, 300);
   }
 });
 
