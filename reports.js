@@ -44,23 +44,54 @@ function renderReports(fromISO, toISO){
             <button class="btn" onclick="emailReport('kpi')"><span class="icon icon-email"></span>Email Report</button>
           </div>
         </div>
-        <div class="kpis">
-          <div class="chip">Services Gross € ${svcGross.toFixed(2)}</div>
-          <div class="chip">Retail Gross € ${retailGross.toFixed(2)}</div>
-          <div class="chip">Revenue Gross € ${totalGross.toFixed(2)}</div>
-          <div class="chip">VAT Output € ${vat.toFixed(2)}</div>
-          <div class="chip">COGS € ${cogs.toFixed(2)}</div>
-          <div class="chip">Gross Profit € ${grossProfit.toFixed(2)}</div>
-          <div class="chip">Expenses (Net) € ${expNet.toFixed(2)}</div>
-          <div class="chip">Operating Profit € ${operatingProfit.toFixed(2)}</div>
+        
+        <!-- Key Metrics Section (Collapsible) -->
+        <div class="collapsible-section expanded" id="kpi-metrics-section">
+          <div class="collapsible-header" onclick="toggleCollapse('kpi-metrics-section')">
+            <h4>📊 KEY PERFORMANCE INDICATORS</h4>
+            <div class="section-summary">
+              <div class="summary-chip highlight">Revenue: €${totalGross.toFixed(2)}</div>
+              <div class="summary-chip ${operatingProfit >= 0 ? 'highlight' : ''}">Profit: €${operatingProfit.toFixed(2)}</div>
+            </div>
+            <button class="collapsible-toggle">▼</button>
+          </div>
+          <div class="collapsible-content">
+            <div class="collapsible-body">
+              <div class="kpis">
+                <div class="chip">Services Gross € ${svcGross.toFixed(2)}</div>
+                <div class="chip">Retail Gross € ${retailGross.toFixed(2)}</div>
+                <div class="chip">Revenue Gross € ${totalGross.toFixed(2)}</div>
+                <div class="chip">VAT Output € ${vat.toFixed(2)}</div>
+                <div class="chip">COGS € ${cogs.toFixed(2)}</div>
+                <div class="chip">Gross Profit € ${grossProfit.toFixed(2)}</div>
+                <div class="chip">Expenses (Net) € ${expNet.toFixed(2)}</div>
+                <div class="chip">Operating Profit € ${operatingProfit.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <h4 class="mt">Expenses Detail</h4>
-        <table class="table">
-          <thead><tr><th>Date</th><th>Category</th><th>Supplier</th><th>Net</th><th>VAT</th><th>Total</th></tr></thead>
-          <tbody>
-            ${expenses.map(e=>`<tr><td>${e.date}</td><td>${e.category}</td><td>${e.supplier||''}</td><td>${e.net.toFixed(2)}</td><td>${e.vat.toFixed(2)}</td><td>${e.total.toFixed(2)}</td></tr>`).join('')}
-          </tbody>
-        </table>
+        
+        <!-- Expenses Detail Section (Collapsible) -->
+        <div class="collapsible-section expanded" id="kpi-expenses-section">
+          <div class="collapsible-header" onclick="toggleCollapse('kpi-expenses-section')">
+            <h4>💸 EXPENSES DETAIL</h4>
+            <div class="section-summary">
+              <div class="summary-chip">Total: €${expNet.toFixed(2)}</div>
+              <div class="summary-chip">${expenses.length} Transactions</div>
+            </div>
+            <button class="collapsible-toggle">▼</button>
+          </div>
+          <div class="collapsible-content">
+            <div class="collapsible-body">
+              <table class="table">
+                <thead><tr><th>Date</th><th>Category</th><th>Supplier</th><th>Net</th><th>VAT</th><th>Total</th></tr></thead>
+                <tbody>
+                  ${expenses.map(e=>`<tr><td>${e.date}</td><td>${e.category}</td><td>${e.supplier||''}</td><td>${e.net.toFixed(2)}</td><td>${e.vat.toFixed(2)}</td><td>${e.total.toFixed(2)}</td></tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="pl-content" class="report-section">
@@ -76,6 +107,11 @@ function renderReports(fromISO, toISO){
       </div>
     </div>
   `;
+  
+  // Initialize collapsible sections after rendering
+  setTimeout(() => {
+    initializeCollapsibleSections();
+  }, 100);
 }
 
 function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, expenses, grossProfit, operatingProfit, fromISO, toISO) {
@@ -96,29 +132,96 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
     </div>
     <div class="report-period">Period: ${fromISO || 'All time'} to ${toISO || 'Present'}</div>
     
-    <table class="table pl-table">
-      <thead><tr><th>Account</th><th class="text-right">Amount (€)</th></tr></thead>
-      <tbody>
-        <tr class="section-header"><td colspan="2"><strong>REVENUE</strong></td></tr>
-        <tr><td>&nbsp;&nbsp;Service Revenue</td><td class="text-right">${svcGross.toFixed(2)}</td></tr>
-        <tr><td>&nbsp;&nbsp;Retail Revenue</td><td class="text-right">${retailGross.toFixed(2)}</td></tr>
-        <tr class="subtotal"><td><strong>Total Revenue (Gross)</strong></td><td class="text-right"><strong>${totalGross.toFixed(2)}</strong></td></tr>
-        <tr><td>&nbsp;&nbsp;Less: VAT Output</td><td class="text-right">(${vat.toFixed(2)})</td></tr>
-        <tr class="subtotal"><td><strong>Total Revenue (Net)</strong></td><td class="text-right"><strong>${net.toFixed(2)}</strong></td></tr>
-        
-        <tr class="section-header"><td colspan="2"><strong>COST OF GOODS SOLD</strong></td></tr>
-        <tr><td>&nbsp;&nbsp;Direct Service Costs</td><td class="text-right">(${cogs.toFixed(2)})</td></tr>
-        <tr class="subtotal"><td><strong>Gross Profit</strong></td><td class="text-right"><strong>${grossProfit.toFixed(2)}</strong></td></tr>
-        
-        <tr class="section-header"><td colspan="2"><strong>OPERATING EXPENSES</strong></td></tr>
-        ${Object.entries(expensesByCategory).map(([cat, amount]) => 
-          `<tr><td>&nbsp;&nbsp;${cat}</td><td class="text-right">(${amount.toFixed(2)})</td></tr>`
-        ).join('')}
-        <tr class="subtotal"><td><strong>Total Operating Expenses</strong></td><td class="text-right"><strong>(${expenses.reduce((a,e)=>a+e.net,0).toFixed(2)})</strong></td></tr>
-        
-        <tr class="total"><td><strong>NET PROFIT</strong></td><td class="text-right"><strong>${operatingProfit.toFixed(2)}</strong></td></tr>
-      </tbody>
-    </table>
+    <!-- Revenue Section (Collapsible) -->
+    <div class="collapsible-section expanded" id="revenue-section">
+      <div class="collapsible-header" onclick="toggleCollapse('revenue-section')">
+        <h4>💰 REVENUE</h4>
+        <div class="section-summary">
+          <div class="summary-chip highlight">Total: €${totalGross.toFixed(2)}</div>
+          <div class="summary-chip">Net: €${net.toFixed(2)}</div>
+        </div>
+        <button class="collapsible-toggle">▼</button>
+      </div>
+      <div class="collapsible-content">
+        <div class="collapsible-body">
+          <table class="table">
+            <tbody>
+              <tr><td>&nbsp;&nbsp;Service Revenue</td><td class="text-right">${svcGross.toFixed(2)}</td></tr>
+              <tr><td>&nbsp;&nbsp;Retail Revenue</td><td class="text-right">${retailGross.toFixed(2)}</td></tr>
+              <tr class="subtotal"><td><strong>Total Revenue (Gross)</strong></td><td class="text-right"><strong>${totalGross.toFixed(2)}</strong></td></tr>
+              <tr><td>&nbsp;&nbsp;Less: VAT Output</td><td class="text-right">(${vat.toFixed(2)})</td></tr>
+              <tr class="subtotal"><td><strong>Total Revenue (Net)</strong></td><td class="text-right"><strong>${net.toFixed(2)}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cost of Goods Sold Section (Collapsible) -->
+    <div class="collapsible-section expanded" id="cogs-section">
+      <div class="collapsible-header" onclick="toggleCollapse('cogs-section')">
+        <h4>📦 COST OF GOODS SOLD</h4>
+        <div class="section-summary">
+          <div class="summary-chip">COGS: €${cogs.toFixed(2)}</div>
+          <div class="summary-chip highlight">Gross Profit: €${grossProfit.toFixed(2)}</div>
+        </div>
+        <button class="collapsible-toggle">▼</button>
+      </div>
+      <div class="collapsible-content">
+        <div class="collapsible-body">
+          <table class="table">
+            <tbody>
+              <tr><td>&nbsp;&nbsp;Direct Service Costs</td><td class="text-right">(${cogs.toFixed(2)})</td></tr>
+              <tr class="subtotal"><td><strong>Gross Profit</strong></td><td class="text-right"><strong>${grossProfit.toFixed(2)}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Operating Expenses Section (Collapsible) -->
+    <div class="collapsible-section expanded" id="expenses-section">
+      <div class="collapsible-header" onclick="toggleCollapse('expenses-section')">
+        <h4>💸 OPERATING EXPENSES</h4>
+        <div class="section-summary">
+          <div class="summary-chip">Total: €${expenses.reduce((a,e)=>a+e.net,0).toFixed(2)}</div>
+          <div class="summary-chip">${Object.keys(expensesByCategory).length} Categories</div>
+        </div>
+        <button class="collapsible-toggle">▼</button>
+      </div>
+      <div class="collapsible-content">
+        <div class="collapsible-body">
+          <table class="table">
+            <tbody>
+              ${Object.entries(expensesByCategory).map(([cat, amount]) => 
+                `<tr><td>&nbsp;&nbsp;${cat}</td><td class="text-right">(${amount.toFixed(2)})</td></tr>`
+              ).join('')}
+              <tr class="subtotal"><td><strong>Total Operating Expenses</strong></td><td class="text-right"><strong>(${expenses.reduce((a,e)=>a+e.net,0).toFixed(2)})</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Net Profit Summary -->
+    <div class="collapsible-section expanded" id="profit-section">
+      <div class="collapsible-header" onclick="toggleCollapse('profit-section')">
+        <h4>📊 NET PROFIT SUMMARY</h4>
+        <div class="section-summary">
+          <div class="summary-chip ${operatingProfit >= 0 ? 'highlight' : ''}">${operatingProfit >= 0 ? 'Profit' : 'Loss'}: €${operatingProfit.toFixed(2)}</div>
+        </div>
+        <button class="collapsible-toggle">▼</button>
+      </div>
+      <div class="collapsible-content">
+        <div class="collapsible-body">
+          <table class="table">
+            <tbody>
+              <tr class="total"><td><strong>NET PROFIT</strong></td><td class="text-right"><strong>${operatingProfit.toFixed(2)}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -269,6 +372,32 @@ function showReportTab(tabName) {
   document.getElementById(`${tabName}-tab`).classList.add('active');
 }
 
+// Enhanced collapsible functionality for report sections
+function toggleCollapse(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+  
+  section.classList.toggle('expanded');
+  
+  // Add some nice visual feedback
+  const header = section.querySelector('.collapsible-header');
+  if (header) {
+    header.style.transform = section.classList.contains('expanded') ? 'none' : 'scale(0.98)';
+    setTimeout(() => {
+      if (header.style) header.style.transform = '';
+    }, 150);
+  }
+}
+
+// Initialize all collapsible sections as expanded by default
+function initializeCollapsibleSections() {
+  document.querySelectorAll('.collapsible-section').forEach(section => {
+    if (!section.classList.contains('expanded')) {
+      section.classList.add('expanded');
+    }
+  });
+}
+
 function exportReport(reportType) {
   const reportContent = document.getElementById(`${reportType}-content`);
   const reportHtml = reportContent.innerHTML;
@@ -401,7 +530,9 @@ function loadServiceForAnalysis() {
   const service = catalog.find(s => s.id === serviceId);
   
   if (!service) {
-    matrixNotifications.error('Service not found');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Service not found');
+    }
     return;
   }
   
@@ -424,7 +555,9 @@ function loadServiceForAnalysis() {
   calculateAnalysis();
   
   // Show success notification
-  matrixNotifications.success(`Loaded data for: ${service.name}`, 3000);
+  if (window.MatrixNova && window.MatrixNova.Notifications) {
+    MatrixNova.Notifications.success(`Loaded data for: ${service.name}`, 3000);
+  }
 }
 
 function calculateAnalysis() {
@@ -472,7 +605,9 @@ function saveAnalyzedService() {
   const labour = parseFloat(document.getElementById('analyzer-labour').value) || 0;
   
   if (!price || !products || !utilities || !labour) {
-    matrixNotifications.error('Please fill in all cost fields before saving');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Please fill in all cost fields before saving');
+    }
     return;
   }
   
@@ -490,7 +625,9 @@ function saveAnalyzedService() {
       service.labour = labour;
       upsertService(service);
       
-      matrixNotifications.success(`Service "${service.name}" updated successfully! Price changed from €${oldPrice.toFixed(2)} to €${price.toFixed(2)}`, 5000);
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.success(`Service "${service.name}" updated successfully! Price changed from €${oldPrice.toFixed(2)} to €${price.toFixed(2)}`, 5000);
+      }
       
       // Refresh the dropdown to show updated prices
       populateServiceDropdown();
@@ -513,7 +650,9 @@ function saveAnalyzedService() {
     };
     
     upsertService(newService);
-    matrixNotifications.success(`New service "${serviceName}" added to catalog with price €${price.toFixed(2)}!`, 5000);
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.success(`New service "${serviceName}" added to catalog with price €${price.toFixed(2)}!`, 5000);
+    }
     
     // Refresh the dropdown
     populateServiceDropdown();
@@ -550,7 +689,9 @@ function resetAnalyzer() {
 function emailReport(reportType) {
   const reportContent = document.getElementById(`${reportType}-content`);
   if (!reportContent) {
-    matrixNotifications.error('Report content not found');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Report content not found');
+    }
     return;
   }
   
@@ -639,7 +780,9 @@ function closeEmailModal() {
 function sendEmailReport(reportType) {
   const form = document.getElementById('email-form');
   if (!form.checkValidity()) {
-    matrixNotifications.error('Please fill in all required fields');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Please fill in all required fields');
+    }
     return;
   }
   
@@ -663,7 +806,9 @@ function sendEmailReport(reportType) {
     window.location.href = mailtoLink;
     
     // Show success message
-    matrixNotifications.success('Email client opened with report data');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.success('Email client opened with report data');
+    }
     
     // Close modal
     closeEmailModal();
@@ -677,7 +822,9 @@ function sendEmailReport(reportType) {
     
   } catch (error) {
     console.error('Error opening email client:', error);
-    matrixNotifications.error('Could not open email client. Report content copied to clipboard.');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Could not open email client. Report content copied to clipboard.');
+    }
     copyReportToClipboard(reportType);
     closeEmailModal();
   }
@@ -732,7 +879,9 @@ function copyReportToClipboard(reportType) {
   
   if (navigator.clipboard) {
     navigator.clipboard.writeText(reportText).then(() => {
-      matrixNotifications.success('Report content copied to clipboard');
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.success('Report content copied to clipboard');
+      }
     }).catch(() => {
       fallbackCopyTextToClipboard(reportText);
     });
@@ -750,9 +899,13 @@ function fallbackCopyTextToClipboard(text) {
   
   try {
     document.execCommand('copy');
-    matrixNotifications.success('Report content copied to clipboard');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.success('Report content copied to clipboard');
+    }
   } catch (err) {
-    matrixNotifications.error('Could not copy to clipboard');
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Could not copy to clipboard');
+    }
   }
   
   document.body.removeChild(textArea);
