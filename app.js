@@ -367,51 +367,69 @@ document.getElementById('post-expense').addEventListener('click', ()=>{
 });
 
 document.getElementById('reset-expense').addEventListener('click', ()=>{
-  // Reset all expense form fields
-  document.getElementById('exp-date').value = '';
-  document.getElementById('exp-supplier').value = '';
-  document.getElementById('exp-net').value = '0';
-  document.getElementById('exp-vat-rate').value = '23';
-  
-  // Reset category to first option
-  const categorySelect = document.getElementById('exp-category');
-  if (categorySelect.options.length > 0) {
-    categorySelect.selectedIndex = 0;
-  }
-  
-  // Show notification if available
-  if (window.MatrixNova && window.MatrixNova.Notifications) {
-    MatrixNova.Notifications.info('Expense form reset');
+  if (confirm('Are you sure you want to reset the expense form and clear all expense entries? This action cannot be undone.')) {
+    // Reset all expense form fields
+    document.getElementById('exp-date').value = '';
+    document.getElementById('exp-supplier').value = '';
+    document.getElementById('exp-net').value = '0';
+    document.getElementById('exp-vat-rate').value = '23';
+    
+    // Reset category to first option
+    const categorySelect = document.getElementById('exp-category');
+    if (categorySelect.options.length > 0) {
+      categorySelect.selectedIndex = 0;
+    }
+    
+    // Clear all expenses from persistent storage
+    clearAllExpenses();
+    
+    // Refresh the expense list UI
+    renderExpenseList();
+    
+    // Show notification if available
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.success('Expense form reset and all expenses cleared successfully!');
+    } else {
+      alert('Expense form reset and all expenses cleared!');
+    }
   }
 });
 
 // Clear all expenses functionality
 document.getElementById('clear-all-expenses').addEventListener('click', ()=>{
-  if (window.MatrixNova && window.MatrixNova.Notifications) {
-    MatrixNova.Notifications.confirm('Are you sure you want to clear all expense entries? This action cannot be undone.', {
-      onConfirm: () => {
-        const btn = document.getElementById('clear-all-expenses');
-        MatrixNova.Loading.show(btn.parentElement);
-        
-        setTimeout(() => {
-          try {
-            clearAllExpenses();
-            renderExpenseList();
-            MatrixNova.Notifications.success('All expenses cleared successfully!');
-          } catch (error) {
-            MatrixNova.Notifications.error('Error clearing expenses: ' + error.message);
-          } finally {
-            MatrixNova.Loading.hide(btn.parentElement);
-          }
-        }, 300);
-      }
-    });
-  } else {
-    if (confirm('Are you sure you want to clear all expense entries? This action cannot be undone.')) {
-      clearAllExpenses();
-      renderExpenseList();
-      alert('All expenses cleared!');
+  if (confirm('Are you sure you want to clear all expense entries? This action cannot be undone.')) {
+    const btn = document.getElementById('clear-all-expenses');
+    
+    // Add loading state if MatrixNova is available
+    if (window.MatrixNova && window.MatrixNova.Loading) {
+      MatrixNova.Loading.show(btn.parentElement);
     }
+    
+    setTimeout(() => {
+      try {
+        clearAllExpenses();
+        renderExpenseList();
+        
+        // Show success notification if available
+        if (window.MatrixNova && window.MatrixNova.Notifications) {
+          MatrixNova.Notifications.success('All expenses cleared successfully!');
+        } else {
+          alert('All expenses cleared!');
+        }
+      } catch (error) {
+        // Show error notification if available
+        if (window.MatrixNova && window.MatrixNova.Notifications) {
+          MatrixNova.Notifications.error('Error clearing expenses: ' + error.message);
+        } else {
+          alert('Error clearing expenses: ' + error.message);
+        }
+      } finally {
+        // Hide loading state if MatrixNova is available
+        if (window.MatrixNova && window.MatrixNova.Loading) {
+          MatrixNova.Loading.hide(btn.parentElement);
+        }
+      }
+    }, 300);
   }
 });
 

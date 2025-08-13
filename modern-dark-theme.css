@@ -18,14 +18,14 @@
   --text-disabled: #484f58;
   
   /* Accent Colors */
-  --accent-primary: #2ea043;
-  --accent-secondary: #238636;
-  --accent-emphasis: #46954a;
-  --accent-fg: #ffffff;
+  --accent-primary: #FFD700;
+  --accent-secondary: #DAA520;
+  --accent-emphasis: #FFA500;
+  --accent-fg: #000000;
   
   /* Semantic Colors */
-  --success: #238636;
-  --success-emphasis: #2ea043;
+  --success: #DAA520;
+  --success-emphasis: #FFD700;
   --warning: #d29922;
   --warning-emphasis: #fb8500;
   --danger: #da3633;
