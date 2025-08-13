@@ -95,7 +95,10 @@
           <button class="btn subtle" id="reset-expense" aria-label="Reset expense form"><span class="icon icon-remove"></span>Reset</button>
         </div>
         <div id="expense-help" class="sr-only">Posts the expense to your accounting records</div>
-        <h3 class="mt">Recent</h3>
+        <div class="row between mt">
+          <h3>Recent</h3>
+          <button class="btn danger" id="clear-all-expenses" aria-label="Clear all expense entries"><span class="icon icon-remove"></span>Clear All Expenses</button>
+        </div>
         <table class="table" id="exp-list">
           <thead><tr><th>Date</th><th>Category</th><th>Supplier</th><th>Net</th><th>VAT</th><th>Total</th></tr></thead>
           <tbody></tbody>
