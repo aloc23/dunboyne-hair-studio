@@ -379,9 +379,13 @@ document.getElementById('reset-expense').addEventListener('click', ()=>{
     categorySelect.selectedIndex = 0;
   }
   
+  // Clear all expense records from storage and UI
+  clearAllExpenses();
+  renderExpenseList();
+  
   // Show notification if available
   if (window.MatrixNova && window.MatrixNova.Notifications) {
-    MatrixNova.Notifications.info('Expense form reset');
+    MatrixNova.Notifications.info('Expense form reset and all records cleared');
   }
 });
 
