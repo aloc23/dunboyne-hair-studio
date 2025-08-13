@@ -367,21 +367,31 @@ document.getElementById('post-expense').addEventListener('click', ()=>{
 });
 
 document.getElementById('reset-expense').addEventListener('click', ()=>{
-  // Reset all expense form fields
-  document.getElementById('exp-date').value = '';
-  document.getElementById('exp-supplier').value = '';
-  document.getElementById('exp-net').value = '0';
-  document.getElementById('exp-vat-rate').value = '23';
-  
-  // Reset category to first option
-  const categorySelect = document.getElementById('exp-category');
-  if (categorySelect.options.length > 0) {
-    categorySelect.selectedIndex = 0;
-  }
-  
-  // Show notification if available
-  if (window.MatrixNova && window.MatrixNova.Notifications) {
-    MatrixNova.Notifications.info('Expense form reset');
+  if (confirm('Are you sure you want to reset the expense form and clear all expense entries? This action cannot be undone.')) {
+    // Reset all expense form fields
+    document.getElementById('exp-date').value = '';
+    document.getElementById('exp-supplier').value = '';
+    document.getElementById('exp-net').value = '0';
+    document.getElementById('exp-vat-rate').value = '23';
+    
+    // Reset category to first option
+    const categorySelect = document.getElementById('exp-category');
+    if (categorySelect.options.length > 0) {
+      categorySelect.selectedIndex = 0;
+    }
+    
+    // Clear all expenses from persistent storage
+    clearAllExpenses();
+    
+    // Refresh the expense list UI
+    renderExpenseList();
+    
+    // Show notification if available
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.success('Expense form reset and all expenses cleared successfully!');
+    } else {
+      alert('Expense form reset and all expenses cleared!');
+    }
   }
 });
 

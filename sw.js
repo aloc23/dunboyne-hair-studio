@@ -1,4 +1,4 @@
-const CACHE_NAME = 'salon-acct-v3';
+const CACHE_NAME = 'dunboyne-hair-studio-v4';
 const STATIC_ASSETS = [
   './',
   'index.html',
@@ -31,7 +31,7 @@ const STATIC_ASSETS = [
 ];
 
 // Dynamic cache for user data and generated content
-const DYNAMIC_CACHE = 'salon-acct-dynamic-v3';
+const DYNAMIC_CACHE = 'dunboyne-hair-studio-dynamic-v4';
 
 // Install event - cache static assets
 self.addEventListener('install', event => {
