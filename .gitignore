@@ -1,0 +1,26 @@
+# Generated icon files (for reference only, icons are embedded as base64 in manifest)
+icon-*.png
+
+# Temporary files
+/tmp/
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Log files
+*.log
+npm-debug.log*
