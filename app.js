@@ -515,3 +515,8 @@ document.getElementById('vat-rate').addEventListener('change', e=>{
 if (window.StaffAnalysis) {
   StaffAnalysis.init();
 }
+
+// Initialize Wages Comparison
+if (window.WagesComparison) {
+  WagesComparison.init();
+}

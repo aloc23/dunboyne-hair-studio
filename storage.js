@@ -16,6 +16,7 @@ function loadDB(){
     takings: [], // {id,date,mode,vatMode,vatRate,lines:[{serviceId,qty,unitPrice,discount,voucher}], retailGross,cash,card, postedAt}
     expenses: [], // {id,date,category,supplier,net,vatRate,vat,total, postedAt}
     journals: [], // summary post entries for COGS month-close etc.
+    wagesData: [], // staff wages comparison data
     settings: {
       vatMode: 'include',
       vatRate: 23,
@@ -70,6 +71,16 @@ function clearAllExpenses(){
 
 function getSettings(){ return loadDB().settings; }
 function saveSettings(s){ const db = loadDB(); db.settings = s; saveDB(db); }
+
+function getWagesData(){
+  const db = loadDB();
+  return db.wagesData || [];
+}
+function saveWagesData(wagesData){
+  const db = loadDB();
+  db.wagesData = wagesData;
+  saveDB(db);
+}
 
 function addJournal(j){
   const db = loadDB();
