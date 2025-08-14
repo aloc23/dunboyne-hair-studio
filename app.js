@@ -510,3 +510,8 @@ document.getElementById('vat-mode').addEventListener('change', e=>{
 document.getElementById('vat-rate').addEventListener('change', e=>{
   const s = getSettings(); s.vatRate = +e.target.value || 23; saveSettings(s);
 });
+
+// Initialize Staff Analysis
+if (window.StaffAnalysis) {
+  StaffAnalysis.init();
+}

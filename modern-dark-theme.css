@@ -2072,3 +2072,73 @@ textarea:focus-visible {
   border-color: var(--accent-primary);
   color: var(--accent-fg);
 }
+
+/* Staff Cost Analysis Styles */
+.comparison-table .positive {
+  color: var(--success);
+}
+
+.comparison-table .negative {
+  color: var(--danger);
+}
+
+.staff-breakdown-table .total td {
+  border-top: 2px solid var(--border);
+  font-weight: 600;
+}
+
+.service-details-table {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.insights-list {
+  background: var(--surface-hover);
+  border-radius: var(--radius-medium);
+  padding: var(--space-4);
+  margin: var(--space-3) 0;
+  border-left: 4px solid var(--accent-primary);
+}
+
+.insights-list li {
+  margin-bottom: var(--space-2);
+  color: var(--text-secondary);
+}
+
+.insights-list li:last-child {
+  margin-bottom: 0;
+}
+
+.period-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.chip.success {
+  background: var(--success);
+  color: white;
+  border-color: var(--success);
+}
+
+.chip.warning {
+  background: var(--warning);
+  color: var(--bg);
+  border-color: var(--warning);
+}
+
+.chip.danger {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+/* Gold tab highlight for Staff Cost Analysis */
+.tab[data-tab="staff-analysis"].active {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-color: #FFD700;
+  color: #000;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
