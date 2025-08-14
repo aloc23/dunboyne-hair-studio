@@ -2203,3 +2203,92 @@ textarea:focus-visible {
 .negative {
   color: var(--danger);
 }
+
+/* Balance Sheet Editable Fields */
+.bs-editable-field {
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-small);
+  padding: var(--space-1) var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-align: right;
+  width: 120px;
+  transition: all var(--transition-base);
+}
+
+.bs-editable-field:hover {
+  border-color: var(--border);
+  background: var(--surface-active);
+}
+
+.bs-editable-field:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+  background: var(--bg-tertiary);
+}
+
+.bs-table {
+  margin-top: var(--space-4);
+}
+
+.bs-table .section-header td {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  border-top: 2px solid var(--border);
+}
+
+.bs-table .subtotal td {
+  border-top: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.bs-table .total td {
+  border-top: 2px solid var(--accent-primary);
+  font-weight: 600;
+  background: var(--surface-hover);
+}
+
+/* Staff Costs Tab Styling */
+.tab[data-tab="staff-costs"].active {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-color: #FFD700;
+  color: #000;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.calculation-display {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--surface-hover);
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--border-subtle);
+}
+
+.calculation-display span {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.staff-summary .card {
+  flex: 1;
+}
+
+.staff-summary .kpis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.staff-summary .chip {
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-2);
+  border-radius: var(--radius-small);
+  display: flex;
+  justify-content: space-between;
+}

@@ -22,7 +22,11 @@ function loadDB(){
       vatRate: 23,
       categories: DEFAULT_EXPENSE_CATEGORIES.slice(),
       utilities: DEFAULT_UTILITIES.slice(),
-      lockedMonths: [] // ['2025-07']
+      lockedMonths: [], // ['2025-07']
+      balanceSheet: {
+        cashInBank: 0,
+        capital: 0
+      }
     }
   };
   saveDB(db);
@@ -97,5 +101,18 @@ function monthLocked(ym){
 function lockMonth(ym){
   const s = getSettings();
   if(!s.lockedMonths.includes(ym)) s.lockedMonths.push(ym);
+  saveSettings(s);
+}
+
+function getBalanceSheetData(){
+  const s = getSettings();
+  return s.balanceSheet || { cashInBank: 0, capital: 0 };
+}
+
+function updateBalanceSheetData(cashInBank, capital){
+  const s = getSettings();
+  if(!s.balanceSheet) s.balanceSheet = {};
+  s.balanceSheet.cashInBank = parseFloat(cashInBank) || 0;
+  s.balanceSheet.capital = parseFloat(capital) || 0;
   saveSettings(s);
 }
