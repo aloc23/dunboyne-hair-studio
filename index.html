@@ -19,6 +19,7 @@
       <button data-tab="analyzer" class="tab"><span class="icon icon-calculator"></span>Service Analyzer</button>
       <button data-tab="reports" class="tab"><span class="icon icon-reports"></span>Reports</button>
       <button data-tab="staff-analysis" class="tab"><span class="icon icon-users"></span>Staff Cost Analysis</button>
+      <button data-tab="wages-comparison" class="tab"><span class="icon icon-euro"></span>Wages Comparison</button>
       <button data-tab="settings" class="tab"><span class="icon icon-settings"></span>Settings</button>
     </nav>
   </header>
@@ -239,6 +240,60 @@
       </div>
     </section>
 
+    <!-- Wages Comparison -->
+    <section id="tab-wages-comparison" class="tabpane">
+      <div class="card">
+        <h2><span class="icon icon-euro"></span>Wages Comparison</h2>
+        
+        <div class="row">
+          <div class="chip">
+            <strong>Weekly Hours Total:</strong> <span id="total-weekly-hours">0</span>h
+          </div>
+          <div class="chip">
+            <strong>Total Weekly Wage Cost:</strong> €<span id="total-weekly-cost">0.00</span>
+          </div>
+          <button class="btn primary" id="refresh-comparison"><span class="icon icon-calculator"></span>Update Comparison</button>
+        </div>
+
+        <h3>Staff Wages Table</h3>
+        <div class="wages-table-container">
+          <table class="table" id="wages-table">
+            <thead>
+              <tr>
+                <th>Staff Name</th>
+                <th>Default Days</th>
+                <th>Hours/Week</th>
+                <th>Hourly Rate (€)</th>
+                <th>Gross Weekly (€)</th>
+                <th>Tax % (€)</th>
+                <th>PRSI % (€)</th>
+                <th>USC % (€)</th>
+                <th>Bonus (€)</th>
+                <th>Adjustments (€)</th>
+                <th>Net Weekly (€)</th>
+                <th>Per Hour Summary (€)</th>
+              </tr>
+            </thead>
+            <tbody id="wages-table-body">
+              <!-- Dynamic content will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="row mt">
+          <button class="btn" id="add-staff-member"><span class="icon icon-add"></span>Add Staff Member</button>
+          <button class="btn subtle" id="reset-wages"><span class="icon icon-remove"></span>Reset to Defaults</button>
+        </div>
+
+        <div class="comparison-section mt">
+          <h3>Cost Comparison Analysis</h3>
+          <div id="wages-comparison-output">
+            <!-- Comparison results will be displayed here -->
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Settings -->
     <section id="tab-settings" class="tabpane">
       <div class="card">
@@ -269,6 +324,7 @@
   <script src="ledger.js"></script>
   <script src="reports.js"></script>
   <script src="staff-analysis.js"></script>
+  <script src="wages-comparison.js"></script>
   <script src="matrix-nova-enhancements.js"></script>
   <script src="app.js"></script>
   <script>
