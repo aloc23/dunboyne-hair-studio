@@ -575,28 +575,53 @@ function exportReportExcel(reportType) {
 function initializeServiceAnalyzer() {
   console.log('Initializing Service Analyzer...');
   
-  populateServiceDropdown();
-  
-  // Add event listeners for real-time calculation
-  const inputs = ['analyzer-price', 'analyzer-mins', 'analyzer-products', 'analyzer-utilities', 'analyzer-labour', 'analyzer-margin'];
-  inputs.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) {
-      // Remove existing listeners to avoid duplicates
-      element.removeEventListener('input', calculateAnalysis);
-      element.addEventListener('input', calculateAnalysis);
+  try {
+    // Try to populate service dropdown first
+    populateServiceDropdown();
+    
+    // Add event listeners for real-time calculation
+    const inputs = ['analyzer-price', 'analyzer-mins', 'analyzer-products', 'analyzer-utilities', 'analyzer-labour', 'analyzer-margin'];
+    const missingInputs = [];
+    
+    inputs.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        // Remove existing listeners to avoid duplicates
+        element.removeEventListener('input', calculateAnalysis);
+        element.addEventListener('input', calculateAnalysis);
+        console.log(`Successfully added input listener to: ${id}`);
+      } else {
+        missingInputs.push(id);
+      }
+    });
+    
+    // Log missing input elements for diagnostics
+    if (missingInputs.length > 0) {
+      console.error('Service Analyzer: Missing input elements:', missingInputs);
+      console.error('These elements are required for the analyzer to function properly. Please check the HTML structure.');
     }
-  });
-  
-  // Auto-load service data when service is selected (no button click needed)
-  const serviceSelect = document.getElementById('analyzer-service');
-  if (serviceSelect) {
-    console.log('Adding change listener to service select...');
-    // Remove existing listeners to avoid duplicates
-    serviceSelect.removeEventListener('change', handleServiceSelection);
-    serviceSelect.addEventListener('change', handleServiceSelection);
-  } else {
-    console.log('Service select element not found');
+    
+    // Auto-load service data when service is selected (no button click needed)
+    const serviceSelect = document.getElementById('analyzer-service');
+    if (serviceSelect) {
+      console.log('Adding change listener to service select...');
+      // Remove existing listeners to avoid duplicates
+      serviceSelect.removeEventListener('change', handleServiceSelection);
+      serviceSelect.addEventListener('change', handleServiceSelection);
+      console.log('Service Analyzer initialization completed successfully');
+    } else {
+      console.warn('Service Analyzer: Service select element (analyzer-service) not found in DOM');
+      console.warn('The service selection functionality will not be available. Please ensure the analyzer-service element exists.');
+    }
+    
+  } catch (error) {
+    console.error('Service Analyzer initialization failed:', error);
+    console.error('The Service Analyzer may not function properly. Please check console for details and verify DOM structure.');
+    
+    // Don't throw the error to prevent breaking the app
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Service Analyzer failed to initialize. Check console for details.');
+    }
   }
 }
 
@@ -610,59 +635,133 @@ function handleServiceSelection(event) {
 }
 
 function populateServiceDropdown() {
-  const catalog = getCatalog();
-  const select = document.getElementById('analyzer-service');
-  
-  // Clear existing options except the first one
-  select.innerHTML = '<option value="">Choose a service to analyze...</option>';
-  
-  catalog.forEach(service => {
-    const option = document.createElement('option');
-    option.value = service.id;
-    option.textContent = `${service.name} - €${service.price.toFixed(2)}`;
-    select.appendChild(option);
-  });
+  try {
+    const catalog = getCatalog();
+    const select = document.getElementById('analyzer-service');
+    
+    if (!select) {
+      console.error('Service Analyzer: Cannot populate dropdown - analyzer-service element not found');
+      console.error('Please ensure the analyzer-service select element exists in the DOM');
+      return;
+    }
+    
+    if (!catalog || !Array.isArray(catalog)) {
+      console.error('Service Analyzer: Cannot populate dropdown - invalid catalog data:', catalog);
+      return;
+    }
+    
+    // Clear existing options except the first one
+    select.innerHTML = '<option value="">Choose a service to analyze...</option>';
+    
+    catalog.forEach(service => {
+      if (service && service.id && service.name && typeof service.price === 'number') {
+        const option = document.createElement('option');
+        option.value = service.id;
+        option.textContent = `${service.name} - €${service.price.toFixed(2)}`;
+        select.appendChild(option);
+      } else {
+        console.warn('Service Analyzer: Skipping invalid service data:', service);
+      }
+    });
+    
+    console.log(`Service Analyzer: Successfully populated dropdown with ${catalog.length} services`);
+    
+  } catch (error) {
+    console.error('Service Analyzer: Error populating service dropdown:', error);
+    console.error('The service dropdown may not function properly. Please check the catalog data and DOM structure.');
+  }
 }
 
 function loadServiceForAnalysis() {
-  const serviceId = document.getElementById('analyzer-service').value;
-  if (!serviceId) {
-    // Hide the cost breakdown section if no service selected
-    document.getElementById('cost-breakdown').style.display = 'none';
-    return;
-  }
-  
-  const catalog = getCatalog();
-  const service = catalog.find(s => s.id === serviceId);
-  
-  if (!service) {
-    if (window.MatrixNova && window.MatrixNova.Notifications) {
-      MatrixNova.Notifications.error('Service not found');
+  try {
+    const serviceSelect = document.getElementById('analyzer-service');
+    if (!serviceSelect) {
+      console.error('Service Analyzer: Cannot load service - analyzer-service element not found');
+      return;
     }
-    return;
-  }
-  
-  // Populate the analyzer with current service data
-  document.getElementById('analyzer-price').value = service.price.toFixed(2);
-  document.getElementById('analyzer-mins').value = service.mins || 0;
-  document.getElementById('analyzer-products').value = service.products.toFixed(2);
-  document.getElementById('analyzer-utilities').value = service.utilities.toFixed(2);
-  document.getElementById('analyzer-labour').value = service.labour.toFixed(2);
-  
-  // Show the cost breakdown section with smooth animation
-  const costBreakdown = document.getElementById('cost-breakdown');
-  costBreakdown.style.display = 'block';
-  
-  // Add Matrix Nova glow effect for enhanced UX
-  costBreakdown.classList.add('matrix-glow');
-  setTimeout(() => costBreakdown.classList.remove('matrix-glow'), 1000);
-  
-  // Calculate initial analysis
-  calculateAnalysis();
-  
-  // Show success notification
-  if (window.MatrixNova && window.MatrixNova.Notifications) {
-    MatrixNova.Notifications.success(`Loaded data for: ${service.name}`, 3000);
+    
+    const serviceId = serviceSelect.value;
+    if (!serviceId) {
+      // Hide the cost breakdown section if no service selected
+      const costBreakdown = document.getElementById('cost-breakdown');
+      if (costBreakdown) {
+        costBreakdown.style.display = 'none';
+      }
+      return;
+    }
+    
+    const catalog = getCatalog();
+    if (!catalog || !Array.isArray(catalog)) {
+      console.error('Service Analyzer: Cannot load service - invalid catalog data');
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.error('Unable to load service data - catalog not available');
+      }
+      return;
+    }
+    
+    const service = catalog.find(s => s.id === serviceId);
+    
+    if (!service) {
+      console.error(`Service Analyzer: Service with ID ${serviceId} not found in catalog`);
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.error('Service not found');
+      }
+      return;
+    }
+    
+    // Check if required input elements exist before populating
+    const requiredElements = ['analyzer-price', 'analyzer-mins', 'analyzer-products', 'analyzer-utilities', 'analyzer-labour'];
+    const missingElements = [];
+    
+    requiredElements.forEach(id => {
+      const element = document.getElementById(id);
+      if (!element) {
+        missingElements.push(id);
+      }
+    });
+    
+    if (missingElements.length > 0) {
+      console.error('Service Analyzer: Cannot load service data - missing required elements:', missingElements);
+      if (window.MatrixNova && window.MatrixNova.Notifications) {
+        MatrixNova.Notifications.error('Some analyzer input fields are missing from the page');
+      }
+      return;
+    }
+    
+    // Populate the analyzer with current service data
+    document.getElementById('analyzer-price').value = service.price.toFixed(2);
+    document.getElementById('analyzer-mins').value = service.mins || 0;
+    document.getElementById('analyzer-products').value = (service.products || 0).toFixed(2);
+    document.getElementById('analyzer-utilities').value = (service.utilities || 0).toFixed(2);
+    document.getElementById('analyzer-labour').value = (service.labour || 0).toFixed(2);
+    
+    // Show the cost breakdown section with smooth animation
+    const costBreakdown = document.getElementById('cost-breakdown');
+    if (costBreakdown) {
+      costBreakdown.style.display = 'block';
+      
+      // Add Matrix Nova glow effect for enhanced UX
+      costBreakdown.classList.add('matrix-glow');
+      setTimeout(() => costBreakdown.classList.remove('matrix-glow'), 1000);
+    } else {
+      console.warn('Service Analyzer: cost-breakdown element not found - visual feedback will not be shown');
+    }
+    
+    // Calculate initial analysis
+    calculateAnalysis();
+    
+    // Show success notification
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.success(`Loaded data for: ${service.name}`, 3000);
+    }
+    
+    console.log(`Service Analyzer: Successfully loaded service data for: ${service.name}`);
+    
+  } catch (error) {
+    console.error('Service Analyzer: Error loading service for analysis:', error);
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.error('Failed to load service data. Check console for details.');
+    }
   }
 }
 
