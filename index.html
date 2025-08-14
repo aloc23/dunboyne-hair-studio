@@ -18,6 +18,7 @@
       <button data-tab="catalog" class="tab"><span class="icon icon-catalog"></span>Service Catalog</button>
       <button data-tab="analyzer" class="tab"><span class="icon icon-calculator"></span>Service Analyzer</button>
       <button data-tab="reports" class="tab"><span class="icon icon-reports"></span>Reports</button>
+      <button data-tab="staff-analysis" class="tab"><span class="icon icon-users"></span>Staff Cost Analysis</button>
       <button data-tab="settings" class="tab"><span class="icon icon-settings"></span>Settings</button>
     </nav>
   </header>
@@ -225,6 +226,19 @@
       </div>
     </section>
 
+    <!-- Staff Cost Analysis -->
+    <section id="tab-staff-analysis" class="tabpane">
+      <div class="card">
+        <h2><span class="icon icon-users"></span>Staff Cost Analysis</h2>
+        <div class="row">
+          <label>From <input type="date" id="staff-from"></label>
+          <label>To <input type="date" id="staff-to"></label>
+          <button class="btn primary" id="analyze-staff-costs"><span class="icon icon-calculator"></span>Analyze</button>
+        </div>
+        <div id="staff-analysis-output" class="mt"></div>
+      </div>
+    </section>
+
     <!-- Settings -->
     <section id="tab-settings" class="tabpane">
       <div class="card">
@@ -254,6 +268,7 @@
   <script src="storage.js"></script>
   <script src="ledger.js"></script>
   <script src="reports.js"></script>
+  <script src="staff-analysis.js"></script>
   <script src="matrix-nova-enhancements.js"></script>
   <script src="app.js"></script>
   <script>
