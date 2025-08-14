@@ -329,6 +329,9 @@ function generateBalanceSheet(fromISO, toISO) {
   const db = loadDB();
   const settings = getSettings();
   
+  // Get Balance Sheet data
+  const balanceSheetData = getBalanceSheetData();
+  
   // Calculate inventory value automatically
   const inventoryValue = calculateInventoryValue(toISO);
   
@@ -349,8 +352,11 @@ function generateBalanceSheet(fromISO, toISO) {
     return sum + totals.vat;
   }, 0) - allExpenses.reduce((sum, e) => sum + e.vat, 0);
   
-  // Calculate total assets including inventory
-  const totalAssets = inventoryValue;
+  // Calculate total assets including cash, inventory and manual inputs
+  const totalAssets = balanceSheetData.cashInBank + inventoryValue;
+  
+  // Calculate total equity including capital and retained earnings
+  const totalEquity = balanceSheetData.capital + retainedEarnings;
 
   return `
     <div class="row between mb">
@@ -367,10 +373,16 @@ function generateBalanceSheet(fromISO, toISO) {
       <thead><tr><th>Account</th><th class="text-right">Amount (€)</th></tr></thead>
       <tbody>
         <tr class="section-header"><td colspan="2"><strong>ASSETS</strong></td></tr>
-        <tr><td>&nbsp;&nbsp;Cash at Bank</td><td class="text-right">-</td></tr>
+        <tr>
+          <td>&nbsp;&nbsp;Cash at Bank</td>
+          <td class="text-right">
+            <input type="number" step="0.01" value="${balanceSheetData.cashInBank.toFixed(2)}" 
+                   id="cash-in-bank" class="bs-editable-field" onchange="updateBalanceSheetField('cashInBank', this.value)" />
+          </td>
+        </tr>
         <tr><td>&nbsp;&nbsp;Accounts Receivable</td><td class="text-right">-</td></tr>
         <tr><td>&nbsp;&nbsp;Inventory <span class="text-muted" style="font-size: var(--font-size-xs);">(Auto-calculated)</span></td><td class="text-right">${inventoryValue.toFixed(2)}</td></tr>
-        <tr class="subtotal"><td><strong>Total Assets</strong></td><td class="text-right"><strong>${totalAssets.toFixed(2)}</strong></td></tr>
+        <tr class="subtotal"><td><strong>Total Assets</strong></td><td class="text-right"><strong id="total-assets">${totalAssets.toFixed(2)}</strong></td></tr>
         
         <tr class="section-header"><td colspan="2"><strong>LIABILITIES</strong></td></tr>
         <tr><td>&nbsp;&nbsp;VAT Payable</td><td class="text-right">${vatLiability.toFixed(2)}</td></tr>
@@ -378,16 +390,22 @@ function generateBalanceSheet(fromISO, toISO) {
         <tr class="subtotal"><td><strong>Total Liabilities</strong></td><td class="text-right"><strong>${vatLiability.toFixed(2)}</strong></td></tr>
         
         <tr class="section-header"><td colspan="2"><strong>EQUITY</strong></td></tr>
-        <tr><td>&nbsp;&nbsp;Capital</td><td class="text-right">-</td></tr>
+        <tr>
+          <td>&nbsp;&nbsp;Capital</td>
+          <td class="text-right">
+            <input type="number" step="0.01" value="${balanceSheetData.capital.toFixed(2)}" 
+                   id="capital" class="bs-editable-field" onchange="updateBalanceSheetField('capital', this.value)" />
+          </td>
+        </tr>
         <tr><td>&nbsp;&nbsp;Retained Earnings</td><td class="text-right">${retainedEarnings.toFixed(2)}</td></tr>
-        <tr class="subtotal"><td><strong>Total Equity</strong></td><td class="text-right"><strong>${retainedEarnings.toFixed(2)}</strong></td></tr>
+        <tr class="subtotal"><td><strong>Total Equity</strong></td><td class="text-right"><strong id="total-equity">${totalEquity.toFixed(2)}</strong></td></tr>
         
-        <tr class="total"><td><strong>TOTAL LIABILITIES + EQUITY</strong></td><td class="text-right"><strong>${(vatLiability + retainedEarnings).toFixed(2)}</strong></td></tr>
+        <tr class="total"><td><strong>TOTAL LIABILITIES + EQUITY</strong></td><td class="text-right"><strong id="total-liab-equity">${(vatLiability + totalEquity).toFixed(2)}</strong></td></tr>
       </tbody>
     </table>
     
     <div class="mt">
-      <p><em>Note: Inventory value is automatically calculated using product supplies data from the service catalog and recent usage patterns. For active periods, it represents 1.5 months of stock based on service activity. For new or low-activity periods, it estimates 2 months of baseline inventory. Labor costs from services are tracked separately in staff expenses. Cash and other asset values should be updated manually based on actual bank statements.</em></p>
+      <p><em>Note: Inventory value is automatically calculated using product supplies data from the service catalog and recent usage patterns. For active periods, it represents 1.5 months of stock based on service activity. For new or low-activity periods, it estimates 2 months of baseline inventory. Labor costs from services are tracked separately in staff expenses. Cash and Capital values can be edited and will be saved automatically.</em></p>
     </div>
   `;
 }
@@ -1132,3 +1150,37 @@ document.addEventListener('click', function(e) {
     }, 100);
   }
 });
+
+// Balance Sheet field update function
+function updateBalanceSheetField(field, value) {
+  const currentData = getBalanceSheetData();
+  
+  if (field === 'cashInBank') {
+    updateBalanceSheetData(value, currentData.capital);
+  } else if (field === 'capital') {
+    updateBalanceSheetData(currentData.cashInBank, value);
+  }
+  
+  // Recalculate and update totals
+  updateBalanceSheetTotals();
+}
+
+function updateBalanceSheetTotals() {
+  const balanceSheetData = getBalanceSheetData();
+  const inventoryValue = parseFloat(document.querySelector('.bs-table tr:nth-child(5) td:nth-child(2)').textContent) || 0;
+  const vatLiability = parseFloat(document.querySelector('.bs-table tr:nth-child(7) td:nth-child(2)').textContent) || 0;
+  const retainedEarnings = parseFloat(document.querySelector('.bs-table tr:nth-child(11) td:nth-child(2)').textContent) || 0;
+  
+  const totalAssets = balanceSheetData.cashInBank + inventoryValue;
+  const totalEquity = balanceSheetData.capital + retainedEarnings;
+  const totalLiabEquity = vatLiability + totalEquity;
+  
+  // Update the display
+  const totalAssetsElement = document.getElementById('total-assets');
+  const totalEquityElement = document.getElementById('total-equity');
+  const totalLiabEquityElement = document.getElementById('total-liab-equity');
+  
+  if (totalAssetsElement) totalAssetsElement.textContent = totalAssets.toFixed(2);
+  if (totalEquityElement) totalEquityElement.textContent = totalEquity.toFixed(2);
+  if (totalLiabEquityElement) totalLiabEquityElement.textContent = totalLiabEquity.toFixed(2);
+}

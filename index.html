@@ -18,6 +18,7 @@
       <button data-tab="catalog" class="tab"><span class="icon icon-catalog"></span>Service Catalog</button>
       <button data-tab="analyzer" class="tab"><span class="icon icon-calculator"></span>Service Analyzer</button>
       <button data-tab="reports" class="tab"><span class="icon icon-reports"></span>Reports</button>
+      <button data-tab="staff-costs" class="tab"><span class="icon icon-euro"></span>Staff Costs</button>
       <button data-tab="staff-analysis" class="tab"><span class="icon icon-users"></span>Staff Cost Analysis</button>
       <button data-tab="wages-comparison" class="tab"><span class="icon icon-euro"></span>Wages Comparison</button>
       <button data-tab="settings" class="tab"><span class="icon icon-settings"></span>Settings</button>
@@ -227,6 +228,94 @@
       </div>
     </section>
 
+    <!-- Staff Costs -->
+    <section id="tab-staff-costs" class="tabpane">
+      <div class="card">
+        <h2><span class="icon icon-euro"></span>Staff Costs</h2>
+        <div class="row">
+          <label>Date <input type="date" id="staff-cost-date"></label>
+          <label>Staff Member
+            <select id="staff-member">
+              <option value="">Select staff member...</option>
+            </select>
+          </label>
+          <label>Type
+            <select id="staff-cost-type">
+              <option value="wages">Regular Wages</option>
+              <option value="overtime">Overtime</option>
+              <option value="bonus">Bonus</option>
+              <option value="commission">Commission</option>
+              <option value="holiday-pay">Holiday Pay</option>
+              <option value="sick-pay">Sick Pay</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label>Hours Worked <input type="number" step="0.5" id="staff-hours" value="0"></label>
+          <label>Rate per Hour (€) <input type="number" step="0.01" id="staff-rate" value="0"></label>
+          <label>Additional Amount (€) <input type="number" step="0.01" id="staff-additional" value="0"></label>
+          <label>Description <input type="text" id="staff-description" placeholder="Pay period, note, etc."></label>
+        </div>
+        <div class="row">
+          <div class="calculation-display">
+            <span>Total Gross: €<span id="staff-gross-total">0.00</span></span>
+            <span>VAT: €<span id="staff-vat-amount">0.00</span></span>
+            <span>Total Cost: €<span id="staff-total-cost">0.00</span></span>
+          </div>
+        </div>
+        <div class="row mt">
+          <button class="btn primary" id="post-staff-cost" aria-describedby="staff-cost-help"><span class="icon icon-save"></span>Post Staff Cost</button>
+          <button class="btn subtle" id="reset-staff-cost" aria-label="Reset staff cost form"><span class="icon icon-remove"></span>Reset</button>
+        </div>
+        <div id="staff-cost-help" class="sr-only">Posts the staff cost to your accounting records as an expense</div>
+        
+        <div class="row between mt">
+          <h3>Recent Staff Costs</h3>
+          <button class="btn danger" id="clear-all-staff-costs" aria-label="Clear all staff cost entries"><span class="icon icon-remove"></span>Clear All Staff Costs</button>
+        </div>
+        <table class="table" id="staff-cost-list">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Staff Member</th>
+              <th>Type</th>
+              <th>Hours</th>
+              <th>Rate</th>
+              <th class="text-right">Gross (€)</th>
+              <th class="text-right">VAT (€)</th>
+              <th class="text-right">Total (€)</th>
+              <th>Description</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        
+        <div class="staff-summary mt">
+          <h3>Summary</h3>
+          <div class="row">
+            <div class="card">
+              <h4>This Month</h4>
+              <div class="kpis">
+                <div class="chip"><strong>Total Hours:</strong> <span id="monthly-staff-hours">0</span></div>
+                <div class="chip"><strong>Total Cost:</strong> €<span id="monthly-staff-cost">0.00</span></div>
+                <div class="chip"><strong>Average Rate:</strong> €<span id="monthly-avg-rate">0.00</span>/hr</div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>Year to Date</h4>
+              <div class="kpis">
+                <div class="chip"><strong>Total Hours:</strong> <span id="yearly-staff-hours">0</span></div>
+                <div class="chip"><strong>Total Cost:</strong> €<span id="yearly-staff-cost">0.00</span></div>
+                <div class="chip"><strong>Average Rate:</strong> €<span id="yearly-avg-rate">0.00</span>/hr</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Staff Cost Analysis -->
     <section id="tab-staff-analysis" class="tabpane">
       <div class="card">
@@ -324,6 +413,7 @@
   <script src="ledger.js"></script>
   <script src="reports.js"></script>
   <script src="staff-analysis.js"></script>
+  <script src="staff-costs.js"></script>
   <script src="wages-comparison.js"></script>
   <script src="matrix-nova-enhancements.js"></script>
   <script src="app.js"></script>
