@@ -47,6 +47,63 @@ document.getElementById('add-utility').addEventListener('click', ()=>{
 });
 renderUtilities(); calcUtilPerHour();
 
+// Auto-populate expense amounts from utilities settings
+function handleCategoryChange(e) {
+  const selectedCategory = e.target.value;
+  const netField = document.getElementById('exp-net');
+  const supplierField = document.getElementById('exp-supplier');
+  const settings = getSettings();
+  
+  console.log('Category changed to:', selectedCategory);
+  
+  // Find matching utility by name
+  const matchingUtility = settings.utilities.find(util => 
+    util.name.toLowerCase() === selectedCategory.toLowerCase() ||
+    (selectedCategory === 'Electricity' && util.name.toLowerCase() === 'airtricity') ||
+    (selectedCategory === 'Waste/Bins' && util.name.toLowerCase() === 'bins')
+  );
+  
+  if (matchingUtility) {
+    console.log('Found matching utility:', matchingUtility);
+    
+    // Auto-populate the net amount with the monthly utility cost
+    netField.value = matchingUtility.perMonth.toFixed(2);
+    
+    // Auto-populate supplier name if it's not already filled
+    if (!supplierField.value.trim()) {
+      supplierField.value = matchingUtility.name;
+    }
+    
+    // Show visual feedback
+    netField.classList.add('matrix-glow');
+    setTimeout(() => netField.classList.remove('matrix-glow'), 1000);
+    
+    // Show notification if available
+    if (window.MatrixNova && window.MatrixNova.Notifications) {
+      MatrixNova.Notifications.info(`Auto-filled with ${matchingUtility.name}: €${matchingUtility.perMonth.toFixed(2)}/month`);
+    }
+  } else {
+    console.log('No matching utility found for category:', selectedCategory);
+  }
+}
+
+function setupExpenseCategoryAutoPopulation() {
+  const categorySelect = document.getElementById('exp-category');
+  const netField = document.getElementById('exp-net');
+  const supplierField = document.getElementById('exp-supplier');
+  
+  if (!categorySelect || !netField) {
+    console.log('Expense auto-population: Required elements not found');
+    return;
+  }
+  
+  // Remove any existing listeners to prevent duplicates
+  categorySelect.removeEventListener('change', handleCategoryChange);
+  categorySelect.addEventListener('change', handleCategoryChange);
+  
+  console.log('Expense auto-population: Event listener added successfully');
+}
+
 // Expense categories
 function renderCats(){
   const s = getSettings();
@@ -58,7 +115,11 @@ function renderCats(){
   // populate dropdown
   const sel = document.getElementById('exp-category');
   sel.innerHTML = s.categories.map(c=>`<option>${c}</option>`).join('');
+  
+  // Set up auto-population after dropdown is populated
+  setupExpenseCategoryAutoPopulation();
 }
+
 renderCats();
 document.getElementById('add-cat').addEventListener('click',()=>{
   const s = getSettings();

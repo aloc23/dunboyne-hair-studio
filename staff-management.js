@@ -69,7 +69,7 @@ function addStaffCostEventListeners() {
     }
   });
   
-  // Staff member selection
+  // Staff member selection with enhanced auto-population
   const staffMemberSelect = document.getElementById('staff-member');
   if (staffMemberSelect) {
     staffMemberSelect.addEventListener('change', (e) => {
@@ -82,6 +82,23 @@ function addStaffCostEventListeners() {
         const rateField = document.getElementById('staff-rate');
         if (rateField) {
           rateField.value = parseFloat(rate).toFixed(2);
+          
+          // Add visual feedback to show the field was auto-filled but is still editable
+          rateField.classList.add('matrix-glow');
+          setTimeout(() => rateField.classList.remove('matrix-glow'), 1000);
+          
+          // Show notification if available
+          if (window.MatrixNova && window.MatrixNova.Notifications) {
+            MatrixNova.Notifications.info(`Auto-filled hourly rate: €${parseFloat(rate).toFixed(2)} (editable)`);
+          }
+          
+          calculateStaffCostTotals();
+        }
+      } else {
+        // Clear rate field when no staff member is selected
+        const rateField = document.getElementById('staff-rate');
+        if (rateField) {
+          rateField.value = '0';
           calculateStaffCostTotals();
         }
       }
