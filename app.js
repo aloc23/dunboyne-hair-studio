@@ -310,6 +310,7 @@ document.getElementById('post-takings').addEventListener('click', ()=>{
       document.getElementById('cash-in').value='0';
       document.getElementById('card-in').value='0';
       renderKPIs();
+      renderTakingsList();
     } catch (error) {
       if (window.MatrixNova && window.MatrixNova.Notifications) {
         MatrixNova.Notifications.error('Error posting takings: ' + error.message);
@@ -433,6 +434,44 @@ document.getElementById('clear-all-expenses').addEventListener('click', ()=>{
   }
 });
 
+// Clear all takings functionality
+document.getElementById('clear-all-takings').addEventListener('click', ()=>{
+  if (confirm('Are you sure you want to clear all takings entries? This action cannot be undone.')) {
+    const btn = document.getElementById('clear-all-takings');
+    
+    // Add loading state if MatrixNova is available
+    if (window.MatrixNova && window.MatrixNova.Loading) {
+      MatrixNova.Loading.show(btn.parentElement);
+    }
+    
+    setTimeout(() => {
+      try {
+        clearAllTakings();
+        renderTakingsList();
+        
+        // Show success notification if available
+        if (window.MatrixNova && window.MatrixNova.Notifications) {
+          MatrixNova.Notifications.success('All takings cleared successfully!');
+        } else {
+          alert('All takings cleared!');
+        }
+      } catch (error) {
+        // Show error notification if available
+        if (window.MatrixNova && window.MatrixNova.Notifications) {
+          MatrixNova.Notifications.error('Error clearing takings: ' + error.message);
+        } else {
+          alert('Error clearing takings: ' + error.message);
+        }
+      } finally {
+        // Hide loading state if MatrixNova is available
+        if (window.MatrixNova && window.MatrixNova.Loading) {
+          MatrixNova.Loading.hide(btn.parentElement);
+        }
+      }
+    }, 300);
+  }
+});
+
 function renderExpenseList(){
   const tbody = document.querySelector('#exp-list tbody');
   const exps = listExpenses();
@@ -442,6 +481,28 @@ function renderExpenseList(){
   </tr>`).join('');
 }
 renderExpenseList();
+
+function renderTakingsList(){
+  const tbody = document.querySelector('#takings-list tbody');
+  const takings = listTakings();
+  tbody.innerHTML = takings.slice(-20).reverse().map(t=>{
+    const servicesGross = t.lines?.reduce((sum, line) => sum + (line.unitPrice * line.qty - (line.discount||0) - (line.voucher||0)), 0) || 0;
+    const totalGross = servicesGross + (t.retailGross||0);
+    const vatAmount = t.vatMode === 'include' ? totalGross - (totalGross / (1 + (t.vatRate||23)/100)) : totalGross * ((t.vatRate||23)/100);
+    const netAmount = t.vatMode === 'include' ? totalGross - vatAmount : totalGross;
+    
+    return `<tr>
+      <td>${t.date}</td>
+      <td>${t.mode||'daily'}</td>
+      <td>${servicesGross.toFixed(2)}</td>
+      <td>${(t.retailGross||0).toFixed(2)}</td>
+      <td>${netAmount.toFixed(2)}</td>
+      <td>${vatAmount.toFixed(2)}</td>
+      <td>${totalGross.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+}
+renderTakingsList();
 
 // Reports
 document.getElementById('run-reports').addEventListener('click', ()=>{

@@ -73,6 +73,12 @@ function clearAllExpenses(){
   saveDB(db);
 }
 
+function clearAllTakings(){
+  const db = loadDB();
+  db.takings = [];
+  saveDB(db);
+}
+
 function getSettings(){ return loadDB().settings; }
 function saveSettings(s){ const db = loadDB(); db.settings = s; saveDB(db); }
 
