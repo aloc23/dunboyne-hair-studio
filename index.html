@@ -1,19 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Salon Accounting</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="modern-dark-theme.css"/>
-  <link rel="stylesheet" href="icons.css"/>
+  <link rel="stylesheet" href="modern-dark-theme.css">
+  <link rel="stylesheet" href="icons.css">
 </head>
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
   <header class="topbar">
     <h1>Salon Accounting</h1>
     <nav class="tabs" id="tabs">
-      <button data-tab="takings" class="tab active"><span class="icon icon-sales"></span>Sales & Takings</button>
+      <button data-tab="takings" class="tab active"><span class="icon icon-sales"></span>Sales &amp; Takings</button>
       <button data-tab="expenses" class="tab"><span class="icon icon-expenses"></span>Expenses</button>
       <button data-tab="catalog" class="tab"><span class="icon icon-catalog"></span>Service Catalog</button>
       <button data-tab="analyzer" class="tab"><span class="icon icon-calculator"></span>Service Analyzer</button>
@@ -31,7 +29,7 @@
       <div class="card">
         <h2>Capture Takings</h2>
         <div class="row">
-          <label>Date <input type="date" id="takings-date"/></label>
+          <label>Date <input type="date" id="takings-date"></label>
           <label>Mode
             <select id="takings-mode">
               <option value="daily">Daily</option>
@@ -44,7 +42,7 @@
               <option value="add">VAT added to prices</option>
             </select>
           </label>
-          <label>VAT % <input type="number" step="0.01" id="vat-rate" value="23"/></label>
+          <label>VAT % <input type="number" step="0.01" id="vat-rate" value="23"></label>
         </div>
 
         <h3>Service Lines</h3>
@@ -65,9 +63,9 @@
         <button class="btn" id="add-line"><span class="icon icon-add"></span>Add Service</button>
 
         <div class="row mt">
-          <label><span class="icon icon-cash"></span> Retail Gross (€) <input type="number" step="0.01" id="retail-gross" value="0"/></label>
-          <label><span class="icon icon-cash"></span> Cash In (€) <input type="number" step="0.01" id="cash-in" value="0"/></label>
-          <label><span class="icon icon-card"></span> Card In (€) <input type="number" step="0.01" id="card-in" value="0"/></label>
+          <label><span class="icon icon-cash"></span> Retail Gross (€) <input type="number" step="0.01" id="retail-gross" value="0"></label>
+          <label><span class="icon icon-cash"></span> Cash In (€) <input type="number" step="0.01" id="cash-in" value="0"></label>
+          <label><span class="icon icon-card"></span> Card In (€) <input type="number" step="0.01" id="card-in" value="0"></label>
         </div>
 
         <div class="kpis" id="takings-kpis"></div>
@@ -145,7 +143,7 @@
         </div>
 
         <div class="cost-breakdown" id="cost-breakdown" style="display: none;">
-          <h4>Cost Breakdown & Analysis</h4>
+          <h4>Cost Breakdown &amp; Analysis</h4>
           
           <div class="cost-breakdown-grid">
             <div class="cost-item">
@@ -221,7 +219,7 @@
         <div class="row mt">
           <label>Month <input type="month" id="close-month"></label>
           <div class="close-month-controls">
-            <button class="btn danger" id="close-month-btn" style="display: none;" aria-describedby="close-month-help"><span class="icon icon-warning"></span>Close Month (Post COGS Summary & Lock)</button>
+            <button class="btn danger" id="close-month-btn" style="display: none;" aria-describedby="close-month-help"><span class="icon icon-warning"></span>Close Month (Post COGS Summary &amp; Lock)</button>
             <div id="close-month-help" class="sr-only">This action permanently locks the selected month and cannot be undone</div>
           </div>
         </div>
@@ -398,7 +396,7 @@
         </div>
         <h3 class="mt">Expense Categories</h3>
         <div class="row">
-          <input type="text" id="new-cat" placeholder="Add category"/>
+          <input type="text" id="new-cat" placeholder="Add category">
           <button class="btn" id="add-cat"><span class="icon icon-add"></span>Add</button>
         </div>
         <ul id="cat-list" class="pilllist mt"></ul>
@@ -422,5 +420,7 @@
       navigator.serviceWorker.register('sw.js');
     }
   </script>
+
+
 </body>
 </html>
