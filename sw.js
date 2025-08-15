@@ -23,8 +23,11 @@ const STATIC_ASSETS = [
   'logic.js',
   'seed-data.js',
   'seed.js',
+  'staff-analysis.js',
+  'staff-costs.js',
   'store.js',
   'sw-register.js',
+  'wages-comparison.js',
   // Data files
   'services_seed.json',
   'seed.json'
