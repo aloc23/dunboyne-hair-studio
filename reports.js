@@ -145,8 +145,9 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
     }, 0);
   }, 0);
 
-  // Total staff costs including both manual expenses and service labor costs
-  const totalStaffCosts = staffExpenses + serviceLaborCosts;
+  // Don't double count - use only actual staff expenses in P&L calculation
+  // Service labor costs are theoretical allocations for analysis, not actual expenses
+  const totalStaffCosts = staffExpenses;
 
   return `
     <div class="row between mb">
@@ -211,17 +212,29 @@ function generatePLStatement(svcGross, retailGross, totalGross, net, vat, cogs, 
       <div class="collapsible-header" onclick="toggleCollapse('staff-expenses-section')">
         <h4>👥 STAFF EXPENSES</h4>
         <div class="section-summary">
-          <div class="summary-chip ${totalStaffCosts > 0 ? 'highlight' : ''}">Total: €${totalStaffCosts.toFixed(2)}</div>
+          <div class="summary-chip ${totalStaffCosts > 0 ? 'highlight' : ''}">Actual: €${totalStaffCosts.toFixed(2)}</div>
+          <div class="summary-chip">Theoretical: €${serviceLaborCosts.toFixed(2)}</div>
         </div>
         <button class="collapsible-toggle">▼</button>
       </div>
       <div class="collapsible-content">
         <div class="collapsible-body">
+          <div class="alert info">
+            <strong>Note:</strong> Only actual staff wages & salaries are included in P&L calculations. 
+            Service labor costs are theoretical allocations shown for comparison and analysis.
+          </div>
           <table class="table">
             <tbody>
-              <tr><td>&nbsp;&nbsp;Staff Wages & Salaries</td><td class="text-right">(${staffExpenses.toFixed(2)})</td></tr>
-              <tr><td>&nbsp;&nbsp;Service Labor Costs</td><td class="text-right">(${serviceLaborCosts.toFixed(2)})</td></tr>
+              <tr><td>&nbsp;&nbsp;Staff Wages & Salaries (Actual)</td><td class="text-right">(${staffExpenses.toFixed(2)})</td></tr>
               <tr class="subtotal"><td><strong>Total Staff Expenses</strong></td><td class="text-right"><strong>(${totalStaffCosts.toFixed(2)})</strong></td></tr>
+            </tbody>
+          </table>
+          
+          <h5 class="mt">📊 For Analysis (Not included in P&L)</h5>
+          <table class="table">
+            <tbody>
+              <tr><td>&nbsp;&nbsp;Service Labor Cost Allocation</td><td class="text-right">${serviceLaborCosts.toFixed(2)}</td></tr>
+              <tr><td>&nbsp;&nbsp;Variance (Actual vs Theoretical)</td><td class="text-right ${(staffExpenses - serviceLaborCosts) >= 0 ? 'positive' : 'negative'}">${(staffExpenses - serviceLaborCosts) >= 0 ? '+' : ''}${(staffExpenses - serviceLaborCosts).toFixed(2)}</td></tr>
             </tbody>
           </table>
         </div>

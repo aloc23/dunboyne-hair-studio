@@ -572,12 +572,7 @@ document.getElementById('vat-rate').addEventListener('change', e=>{
   const s = getSettings(); s.vatRate = +e.target.value || 23; saveSettings(s);
 });
 
-// Initialize Staff Analysis
-if (window.StaffAnalysis) {
-  StaffAnalysis.init();
-}
-
-// Initialize Wages Comparison
-if (window.WagesComparison) {
-  WagesComparison.init();
+// Initialize Staff Management (Unified System)
+if (window.StaffManagement) {
+  StaffManagement.init();
 }
