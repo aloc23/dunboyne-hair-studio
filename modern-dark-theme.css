@@ -164,9 +164,10 @@ body {
 
 .tab:hover {
   background: var(--surface-hover);
-  border-color: var(--border);
+  border-color: var(--accent-secondary);
   color: var(--text-primary);
   transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3), 0 0 24px rgba(218, 165, 32, 0.15);
 }
 
 .tab:hover::before {
@@ -202,6 +203,7 @@ main {
   box-shadow: var(--shadow-medium);
   position: relative;
   overflow: hidden;
+  transition: all var(--transition-base);
 }
 
 .card::before {
@@ -212,6 +214,13 @@ main {
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.card:hover {
+  border-color: var(--accent-secondary);
+  box-shadow: var(--shadow-medium), 0 0 12px rgba(255, 215, 0, 0.15), 0 0 24px rgba(218, 165, 32, 0.08);
+  transform: translateY(-1px);
+  transition: all var(--transition-base);
 }
 
 /* Layout Utilities */
@@ -299,8 +308,9 @@ input:focus, select:focus, textarea:focus {
 }
 
 input:hover, select:hover {
-  border-color: var(--border);
+  border-color: var(--accent-secondary);
   background: var(--bg-tertiary);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.2), 0 0 12px rgba(218, 165, 32, 0.1);
 }
 
 input[type="number"] {
@@ -345,9 +355,9 @@ input[type="date"] {
 
 .btn:hover {
   background: var(--surface-hover);
-  border-color: var(--border);
+  border-color: var(--accent-secondary);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-small);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.25), 0 0 16px rgba(218, 165, 32, 0.1);
 }
 
 .btn:hover::before {
@@ -369,7 +379,7 @@ input[type="date"] {
 .btn.primary:hover {
   background: var(--accent-emphasis);
   border-color: var(--accent-emphasis);
-  box-shadow: var(--shadow-medium);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.4), 0 0 32px rgba(255, 165, 0, 0.2);
 }
 
 .btn.secondary {
@@ -449,6 +459,7 @@ input[type="date"] {
 
 .table tr:hover {
   background: var(--surface-hover);
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.2);
 }
 
 .table td:last-child {
@@ -1164,8 +1175,9 @@ input:focus, select:focus, textarea:focus {
 }
 
 input:hover:not(:focus), select:hover:not(:focus) {
-  border-color: var(--border);
+  border-color: var(--accent-secondary);
   background: var(--bg-tertiary);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.2), 0 0 12px rgba(218, 165, 32, 0.1);
 }
 
 /* Enhanced notification positioning */
@@ -1994,6 +2006,7 @@ textarea:focus-visible {
 
 .collapsible-header:hover {
   background: var(--surface-hover);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
 }
 
 .collapsible-header h4 {
